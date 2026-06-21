@@ -71,6 +71,14 @@ const projects = [
     video: "https://vimeo.com/1194363662?fl=ip&fe=ec",
     tone: "field",
   },
+  {
+    id: "documentary-03",
+    title: "Film 03",
+    category: "Documentary",
+    meta: "Long Form",
+    video: "https://www.youtube.com/watch?v=ivhIMTe7Mu8",
+    tone: "cinema",
+  },
 ];
 
 const youtubeDebugProject = {
