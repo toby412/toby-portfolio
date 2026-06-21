@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      name="description"
+      content="Toby Yu is a freelance video editor and motion graphic designer creating rhythm-driven edits, dynamic motion design, and visual storytelling."
+    />
+    <title>Toby Yu | Video Editor &amp; Motion Graphic Designer</title>
+    <link rel="preconnect" href="https://player.vimeo.com" />
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="site-header" aria-label="Site navigation">
+      <a class="mark" href="#top" aria-label="Toby Yu home">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m6 11 6-6 6 6"></path>
+          <path d="M12 5v14"></path>
+        </svg>
+      </a>
+      <nav>
+        <a href="#about">About</a>
+        <a href="#work">Works</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section
+        class="hero"
+        aria-label="Play Toby Yu showreel"
+        role="button"
+        tabindex="0"
+        data-video="showreel"
+      >
+        <div class="hero-media" aria-hidden="true">
+          <iframe
+            title="Toby Yu showreel background"
+            src="https://player.vimeo.com/video/1165378554?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;quality=1080p"
+            allow="autoplay; fullscreen; picture-in-picture"
+            tabindex="-1"
+          ></iframe>
+        </div>
+
+        <div class="hero-copy reveal">
+          <h1 id="hero-title">Toby <span>Yu</span></h1>
+          <p class="hero-role">Crafting visual stories that captivate and inspire</p>
+        </div>
+
+        <div class="hero-play-cursor" aria-hidden="true">
+          <div class="hero-play-cursor-inner">
+            <svg viewBox="0 0 24 24">
+              <path d="m7 4 13 8-13 8Z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="hero-bottom" aria-hidden="true">
+          <span>Scroll</span>
+          <i></i>
+        </div>
+      </section>
+
+      <section class="about section-shell" id="about" aria-labelledby="about-title">
+        <div class="about-copy reveal">
+          <p class="eyebrow">Who am I?</p>
+          <h2 id="about-title">
+            <span>Editing is the art of</span>
+            <strong>invisible storytelling</strong>
+          </h2>
+          <p>
+            I’m Toby Yu, a freelance motion graphics designer and video editor with around
+            three years of experience. I specialize in creating visually engaging videos
+            through strong rhythm, dynamic motion design, and compelling visual storytelling
+            using Premiere Pro and After Effects.
+          </p>
+          <dl class="stats" aria-label="Portfolio statistics">
+            <div>
+              <dt>Projects</dt>
+              <dd data-counter data-start="0" data-target="180" data-suffix="+">180+</dd>
+            </div>
+            <div>
+              <dt>Years</dt>
+              <dd data-counter data-start="0" data-target="3" data-suffix="+">3+</dd>
+            </div>
+            <div>
+              <dt>Views</dt>
+              <dd data-counter data-start="100000" data-target="3000000" data-format="views">3M</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="workflow reveal">
+          <p class="eyebrow">Working Style</p>
+          <h2>How I Work</h2>
+          <ol>
+            <li>
+              <span>01</span>
+              <div>
+                <h3>Briefing</h3>
+                <p>Understanding your vision, footage, audience, and delivery goals.</p>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <h3>Production</h3>
+                <p>Building the edit with clean structure, rhythm, motion, and intent.</p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <h3>Refine</h3>
+                <p>Polishing pacing, graphics, sound, and feedback without losing focus.</p>
+              </div>
+            </li>
+            <li>
+              <span>04</span>
+              <div>
+                <h3>Delivery</h3>
+                <p>Exporting final assets for the right platform, format, and campaign.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="work" id="work" aria-labelledby="work-title">
+        <div class="section-shell">
+          <h2 class="sr-only" id="work-title">Work</h2>
+
+          <div class="work-category reveal">
+            <div class="category-heading">
+              <p class="eyebrow">Commercial Content</p>
+              <h3>Brand &amp; Commercial</h3>
+              <p class="category-description">
+                High-impact commercial productions crafted for brands and campaigns.
+              </p>
+            </div>
+            <div class="carousel-shell two-up-carousel">
+              <button class="carousel-arrow carousel-arrow--previous" type="button" aria-label="Previous commercial project" aria-controls="commercial-carousel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+              </button>
+              <div class="project-grid two-up" id="commercial-carousel" data-category="Commercial"></div>
+              <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next commercial project" aria-controls="commercial-carousel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="work-category reveal">
+            <div class="category-heading">
+              <p class="eyebrow">Short Form Content</p>
+              <h3>Shorts &amp; Reels</h3>
+              <p class="category-description">
+                Vertical content for social media with catchy and viral editing.
+              </p>
+            </div>
+            <div class="carousel-shell three-up-carousel">
+              <button class="carousel-arrow carousel-arrow--previous" type="button" aria-label="Previous short-form project" aria-controls="shorts-carousel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+              </button>
+              <div class="project-grid three-up" id="shorts-carousel" data-category="Shorts &amp; Reels"></div>
+              <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next short-form project" aria-controls="shorts-carousel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="work-category reveal">
+            <div class="category-heading">
+              <p class="eyebrow">Long Form Content</p>
+              <h3>Films &amp; Documentary</h3>
+              <p class="category-description">
+                Cinematic productions for brands, documentaries, and creative projects.
+              </p>
+            </div>
+            <div class="carousel-shell two-up-carousel">
+              <button class="carousel-arrow carousel-arrow--previous" type="button" aria-label="Previous film project" aria-controls="films-carousel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+              </button>
+              <div class="project-grid two-up" id="films-carousel" data-category="Documentary"></div>
+              <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next film project" aria-controls="films-carousel">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact section-shell" id="contact" aria-labelledby="contact-title">
+        <div class="contact-copy reveal">
+          <p class="eyebrow">Let’s Work Together</p>
+          <h2 id="contact-title">Have a project <strong>in mind?</strong></h2>
+          <p>
+            I’m always open to discussing new projects, creative ideas, or opportunities
+            to be part of your vision.
+          </p>
+          <div class="contact-actions">
+            <button
+              class="primary-link contact-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="contact-options"
+            >
+              <span>Get in Touch</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                <path d="m3 7 9 6 9-6"></path>
+              </svg>
+            </button>
+            <a class="email-link" href="mailto:hoger963852@gmail.com">
+              <span>hoger963852@gmail.com</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 17 17 7"></path>
+                <path d="M7 7h10v10"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div class="contact-switcher reveal" id="contact-options">
+          <div class="contact-panel contact-socials" aria-label="External links">
+            <p class="eyebrow">Connect With Me</p>
+            <div class="contact-links">
+              <a href="https://www.instagram.com/mg.toooby/" target="_blank" rel="noreferrer">
+                <span class="social-card-main">
+                  <span class="social-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+                      <circle cx="12" cy="12" r="4"></circle>
+                      <circle cx="17.5" cy="6.5" r="1" class="icon-fill"></circle>
+                    </svg>
+                  </span>
+                  <strong>Instagram</strong>
+                </span>
+                <svg class="external-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 17 17 7"></path>
+                  <path d="M7 7h10v10"></path>
+                </svg>
+              </a>
+              <a href="https://www.linkedin.com/in/tobyvideoedit/" target="_blank" rel="noreferrer">
+                <span class="social-card-main">
+                  <span class="social-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6Z"></path>
+                      <path d="M2 9h4v12H2z"></path>
+                      <circle cx="4" cy="4" r="2" class="icon-fill"></circle>
+                    </svg>
+                  </span>
+                  <strong>LinkedIn</strong>
+                </span>
+                <svg class="external-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 17 17 7"></path>
+                  <path d="M7 7h10v10"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <form class="contact-panel contact-form" aria-hidden="true">
+            <h3>Send a Message</h3>
+            <label>
+              <span class="sr-only">Your Name</span>
+              <input name="name" type="text" placeholder="Your Name" autocomplete="name" required />
+            </label>
+            <label>
+              <span class="sr-only">Your Email</span>
+              <input name="email" type="email" placeholder="Your Email" autocomplete="email" required />
+            </label>
+            <label>
+              <span class="sr-only">Project details</span>
+              <textarea name="message" placeholder="Tell me about your project..." required></textarea>
+            </label>
+            <button class="form-submit" type="submit">
+              <span>Send Message</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 17 17 7"></path>
+                <path d="M7 7h10v10"></path>
+              </svg>
+            </button>
+            <p class="form-status" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-socials" aria-label="Social links">
+          <a href="https://www.instagram.com/mg.toooby/" target="_blank" rel="noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+              <circle cx="12" cy="12" r="4"></circle>
+              <circle cx="17.5" cy="6.5" r="1" class="icon-fill"></circle>
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/in/tobyvideoedit/" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6Z"></path>
+              <path d="M2 9h4v12H2z"></path>
+              <circle cx="4" cy="4" r="2" class="icon-fill"></circle>
+            </svg>
+          </a>
+        </div>
+        <p>© 2026 Toby Yu. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <dialog class="video-modal" aria-label="Video player">
+      <div class="modal-panel">
+        <button class="modal-close" type="button" aria-label="Close video">×</button>
+        <div class="video-frame" data-player></div>
+      </div>
+    </dialog>
+
+    <script defer src="src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+.DS_Store
+src/.DS_Store
+for codex/
+dist/
+node_modules/
