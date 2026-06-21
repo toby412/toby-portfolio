@@ -10,6 +10,7 @@
   --white: #ffffff;
   --shadow: 0 24px 70px rgba(37, 32, 24, 0.12);
   --radius: 8px;
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
   --eyebrow-size: 10px;
   --eyebrow-spacing: 0.4em;
   font-family:
@@ -118,6 +119,14 @@ textarea:focus-visible {
 .site-header nav a {
   font-size: 13px;
   font-weight: 500;
+  transition:
+    color 220ms var(--ease-premium),
+    font-weight 220ms var(--ease-premium);
+}
+
+.site-header nav a[aria-current="page"] {
+  color: var(--accent-strong);
+  font-weight: 600;
 }
 
 .section-shell {
@@ -150,12 +159,12 @@ textarea:focus-visible {
   right: 0;
   bottom: 0;
   z-index: 2;
-  height: 34%;
+  height: 40%;
   background: linear-gradient(
     to bottom,
     rgba(251, 250, 246, 0) 0%,
-    rgba(251, 250, 246, 0.16) 35%,
-    rgba(251, 250, 246, 0.72) 76%,
+    rgba(251, 250, 246, 0.12) 34%,
+    rgba(251, 250, 246, 0.6) 74%,
     var(--paper) 100%
   );
   pointer-events: none;
@@ -166,7 +175,7 @@ textarea:focus-visible {
   inset: 0;
   z-index: 1;
   overflow: hidden;
-  transition: filter 320ms ease;
+  transition: filter 240ms var(--ease-premium);
 }
 
 .hero-media iframe {
@@ -308,8 +317,8 @@ h1 span {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.6);
     transition:
-      opacity 240ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 240ms var(--ease-premium),
+      transform 240ms var(--ease-premium);
     will-change: opacity, transform;
   }
 
@@ -332,7 +341,7 @@ h1 span {
   .hero-media {
     --hero-parallax-x: 0px;
     --hero-parallax-y: 0px;
-    transform: translate3d(var(--hero-parallax-x), var(--hero-parallax-y), 0) scale(1.03);
+    transform: translate3d(var(--hero-parallax-x), var(--hero-parallax-y), 0) scale(1.05);
     transform-origin: center;
     will-change: transform, filter;
   }
@@ -352,8 +361,8 @@ h1 span {
   font-weight: 500;
   cursor: pointer;
   transition:
-    transform 220ms ease,
-    box-shadow 220ms ease;
+    transform 220ms var(--ease-premium),
+    box-shadow 220ms var(--ease-premium);
 }
 
 .primary-link:hover {
@@ -376,7 +385,7 @@ h1 span {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(56px, 6vw, 72px);
   align-items: center;
-  padding: 104px 0 108px;
+  padding: 128px 0 124px;
 }
 
 .about-copy {
@@ -506,15 +515,42 @@ h1 span {
   padding: 12px 16px;
   box-shadow: 0 7px 20px rgba(37, 32, 24, 0.03);
   transition:
-    transform 240ms ease,
-    border-color 240ms ease,
-    box-shadow 240ms ease;
+    transform 240ms var(--ease-premium),
+    border-color 240ms var(--ease-premium),
+    box-shadow 240ms var(--ease-premium);
 }
 
 .workflow li:hover {
   transform: translateY(-3px);
   border-color: rgba(245, 163, 26, 0.42);
   box-shadow: 0 12px 28px rgba(37, 32, 24, 0.09);
+}
+
+.workflow.has-card-stagger li {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 480ms var(--ease-premium),
+    transform 480ms var(--ease-premium),
+    border-color 240ms var(--ease-premium),
+    box-shadow 240ms var(--ease-premium);
+}
+
+.workflow.has-card-stagger.is-card-staggered li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.workflow.has-card-stagger.is-card-staggered li:nth-child(2) {
+  transition-delay: 90ms;
+}
+
+.workflow.has-card-stagger.is-card-staggered li:nth-child(3) {
+  transition-delay: 180ms;
+}
+
+.workflow.has-card-stagger.is-card-staggered li:nth-child(4) {
+  transition-delay: 270ms;
 }
 
 .workflow li > div {
@@ -545,23 +581,27 @@ h1 span {
 
 .work {
   background: var(--soft);
-  padding: 88px 0 104px;
+  padding: 104px 0 120px;
 }
 
 .work-category + .work-category {
-  margin-top: 118px;
+  margin-top: 142px;
 }
 
 .category-heading {
-  margin-bottom: 26px;
+  margin-bottom: 40px;
   text-align: center;
 }
 
 .category-heading h3 {
-  margin-bottom: 14px;
+  margin-bottom: 20px;
   font-size: clamp(34px, 4vw, 58px);
   line-height: 1;
   font-weight: 600;
+}
+
+.category-heading h3 .heading-light {
+  font-weight: 200;
 }
 
 .category-description {
@@ -598,7 +638,7 @@ h1 span {
   opacity: 0;
   cursor: pointer;
   transform: translateY(-50%);
-  transition: opacity 220ms ease;
+  transition: opacity 220ms var(--ease-premium);
 }
 
 .carousel-shell:hover .carousel-arrow,
@@ -646,8 +686,8 @@ h1 span {
   grid-auto-flow: column;
   gap: 22px;
   width: min(940px, 100%);
-  margin: -4px auto;
-  padding: 4px 0;
+  margin: -32px auto;
+  padding: 32px 0;
   overflow-x: auto;
   background: transparent;
   overscroll-behavior-inline: contain;
@@ -686,9 +726,9 @@ h1 span {
   background: #d6d2c8;
   cursor: pointer;
   text-align: left;
-  box-shadow: 0 10px 28px rgba(37, 32, 24, 0.06);
+  box-shadow: 0 10px 28px rgba(37, 32, 24, 0.05);
   transform: translateY(0) scale(1);
-  transition: transform 290ms ease;
+  transition: transform 290ms var(--ease-premium);
 }
 
 .project-card:hover,
@@ -715,7 +755,7 @@ h1 span {
   background-color: rgba(0, 0, 0, 0.22);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 220ms ease;
+  transition: opacity 220ms var(--ease-premium);
 }
 
 .project-card:hover .project-visual::after,
@@ -729,12 +769,12 @@ h1 span {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.02);
-  transition: transform 420ms ease;
+  transform: scale(1);
+  transition: transform 290ms var(--ease-premium);
 }
 
 .project-card:hover .project-thumbnail {
-  transform: scale(1.08);
+  transform: scale(1.02);
 }
 
 .project-play-icon {
@@ -749,8 +789,8 @@ h1 span {
   pointer-events: none;
   transform: translate(-50%, -50%) scale(0.9);
   transition:
-    opacity 200ms ease,
-    transform 200ms ease;
+    opacity 220ms var(--ease-premium),
+    transform 220ms var(--ease-premium);
 }
 
 .project-card:hover .project-play-icon,
@@ -764,7 +804,7 @@ h1 span {
   grid-template-columns: minmax(0, 1fr) minmax(330px, 0.75fr);
   gap: clamp(48px, 7vw, 86px);
   align-items: start;
-  padding: 80px 0 72px;
+  padding: 104px 0 72px;
 }
 
 .contact-actions {
@@ -789,9 +829,9 @@ h1 span {
   font-size: 13px;
   font-weight: 400;
   transition:
-    transform 220ms ease,
-    border-color 220ms ease,
-    background-color 220ms ease;
+    transform 220ms var(--ease-premium),
+    border-color 220ms var(--ease-premium),
+    background-color 220ms var(--ease-premium);
 }
 
 .email-link:hover {
@@ -814,16 +854,16 @@ h1 span {
   position: relative;
   height: var(--contact-panel-height, 214px);
   overflow: clip;
-  transition: height 440ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: height 440ms var(--ease-premium);
 }
 
 .contact-panel {
   position: absolute;
   inset: 0 0 auto;
   transition:
-    opacity 320ms ease,
-    transform 420ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    visibility 320ms ease;
+    opacity 320ms var(--ease-premium),
+    transform 420ms var(--ease-premium),
+    visibility 320ms var(--ease-premium);
 }
 
 .contact-socials {
@@ -869,9 +909,9 @@ h1 span {
   background: #ffffff;
   padding: 16px 18px;
   transition:
-    transform 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    border-color 280ms ease,
-    box-shadow 280ms ease;
+    transform 280ms var(--ease-premium),
+    border-color 280ms var(--ease-premium),
+    box-shadow 280ms var(--ease-premium);
 }
 
 .contact-links a:hover {
@@ -922,7 +962,7 @@ h1 span {
 
 .external-icon {
   color: rgba(25, 24, 22, 0.32);
-  transition: transform 220ms ease;
+  transition: transform 220ms var(--ease-premium);
 }
 
 .contact-links a:hover .external-icon {
@@ -959,8 +999,8 @@ h1 span {
   font: inherit;
   font-size: 14px;
   transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
+    border-color 180ms var(--ease-premium),
+    box-shadow 180ms var(--ease-premium);
 }
 
 .contact-form textarea {
@@ -1033,8 +1073,8 @@ h1 span {
   background: #ffffff;
   color: #55524d;
   transition:
-    transform 220ms ease,
-    border-color 220ms ease;
+    transform 220ms var(--ease-premium),
+    border-color 220ms var(--ease-premium);
 }
 
 .footer-socials a:hover {
@@ -1061,7 +1101,18 @@ h1 span {
 }
 
 .video-modal::backdrop {
-  background: rgba(9, 8, 6, 0.74);
+  background-color: rgba(9, 8, 6, 0);
+  -webkit-backdrop-filter: blur(0);
+  backdrop-filter: blur(0);
+  transition:
+    background-color 260ms var(--ease-premium),
+    -webkit-backdrop-filter 260ms var(--ease-premium),
+    backdrop-filter 260ms var(--ease-premium);
+}
+
+.video-modal.is-visible::backdrop {
+  background-color: rgba(9, 8, 6, 0.74);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
 
@@ -1070,6 +1121,17 @@ h1 span {
   border-radius: var(--radius);
   background: #070706;
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: scale(0.96) translateY(8px);
+  transition:
+    opacity 300ms var(--ease-premium),
+    transform 300ms var(--ease-premium);
+  will-change: opacity, transform;
+}
+
+.video-modal.is-visible .modal-panel {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 .modal-close {
@@ -1103,8 +1165,8 @@ h1 span {
   opacity: 0;
   transform: translateY(24px);
   transition:
-    opacity 700ms ease,
-    transform 700ms ease;
+    opacity 700ms var(--ease-premium),
+    transform 700ms var(--ease-premium);
 }
 
 .reveal.is-visible {
@@ -1114,9 +1176,9 @@ h1 span {
 
 .contact-switcher.reveal {
   transition:
-    height 440ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
-    opacity 700ms ease,
-    transform 700ms ease;
+    height 440ms var(--ease-premium),
+    opacity 700ms var(--ease-premium),
+    transform 700ms var(--ease-premium);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1161,7 +1223,7 @@ h1 span {
 
   .about {
     gap: 56px;
-    padding: 88px 0;
+    padding: 104px 0 100px;
   }
 
   .workflow p {
@@ -1271,11 +1333,11 @@ h1 span {
   }
 
   .work {
-    padding: 84px 0;
+    padding: 96px 0 100px;
   }
 
   .contact {
     gap: 42px;
-    padding: 68px 0 60px;
+    padding: 84px 0 60px;
   }
 }

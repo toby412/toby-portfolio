@@ -402,8 +402,24 @@ function openVideo(projectId) {
       allowfullscreen
     ></iframe>
   `;
+  modal.classList.remove("is-visible", "is-closing");
+  modal.classList.add("is-opening");
   modal.showModal();
   document.body.classList.add("modal-open");
+
+  if (reducedMotion.matches) {
+    modal.classList.add("is-visible");
+    modal.classList.remove("is-opening");
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (!modal.open || modal.classList.contains("is-closing")) return;
+      modal.classList.add("is-visible");
+      modal.classList.remove("is-opening");
+    });
+  });
 }
 
 window.testYouTubeEmbed = () => openVideo(youtubeDebugProject.id);
@@ -482,8 +498,8 @@ hero.addEventListener("pointermove", (event) => {
   const bounds = hero.getBoundingClientRect();
   const relativeX = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
   const relativeY = ((event.clientY - bounds.top) / bounds.height) * 2 - 1;
-  parallaxTargetX = -relativeX * 8;
-  parallaxTargetY = -relativeY * 6;
+  parallaxTargetX = -relativeX * 18;
+  parallaxTargetY = -relativeY * 14;
   queueHeroParallaxFrame();
 });
 
@@ -501,9 +517,23 @@ hero.addEventListener("keydown", (event) => {
 });
 
 function closeVideo() {
-  modal.close();
-  player.innerHTML = "";
-  document.body.classList.remove("modal-open");
+  if (!modal.open || modal.classList.contains("is-closing")) return;
+
+  function finishClose() {
+    modal.classList.remove("is-visible", "is-opening", "is-closing");
+    modal.close();
+    player.innerHTML = "";
+    document.body.classList.remove("modal-open");
+  }
+
+  if (reducedMotion.matches) {
+    finishClose();
+    return;
+  }
+
+  modal.classList.remove("is-visible", "is-opening");
+  modal.classList.add("is-closing");
+  window.setTimeout(finishClose, 320);
 }
 
 document.addEventListener("click", (event) => {
@@ -516,8 +546,9 @@ closeButton.addEventListener("click", closeVideo);
 modal.addEventListener("click", (event) => {
   if (event.target === modal) closeVideo();
 });
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && modal.open) closeVideo();
+modal.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeVideo();
 });
 
 const observer = new IntersectionObserver(
@@ -532,7 +563,62 @@ const observer = new IntersectionObserver(
   { threshold: 0.18 }
 );
 
-document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+document
+  .querySelectorAll(".reveal:not(.about-copy):not(.workflow)")
+  .forEach((element) => observer.observe(element));
+
+const aboutRevealObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-visible");
+      aboutRevealObserver.unobserve(entry.target);
+    });
+  },
+  { threshold: 0.35, rootMargin: "0px 0px -25% 0px" }
+);
+
+document
+  .querySelectorAll(".about-copy.reveal, .workflow.reveal")
+  .forEach((element) => aboutRevealObserver.observe(element));
+
+const navigationLinks = [...document.querySelectorAll('.site-header nav a[href^="#"]')];
+const navigationSections = navigationLinks
+  .map((link) => document.querySelector(link.getAttribute("href")))
+  .filter(Boolean);
+
+function setActiveNavigation(sectionId) {
+  navigationLinks.forEach((link) => {
+    const isActive = link.getAttribute("href") === `#${sectionId}`;
+    if (isActive) {
+      link.setAttribute("aria-current", "page");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  });
+}
+
+function updateActiveNavigation() {
+  const viewportAnchor = window.innerHeight * 0.4;
+  const activeSection = navigationSections.find((section) => {
+    const bounds = section.getBoundingClientRect();
+    return bounds.top <= viewportAnchor && bounds.bottom > viewportAnchor;
+  });
+  setActiveNavigation(activeSection?.id);
+}
+
+const navigationObserver = new IntersectionObserver(updateActiveNavigation, {
+  rootMargin: "-35% 0px -55% 0px",
+  threshold: 0,
+});
+
+navigationSections.forEach((section) => navigationObserver.observe(section));
+navigationLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    setActiveNavigation(link.getAttribute("href").slice(1));
+  });
+});
+updateActiveNavigation();
 
 const stats = document.querySelector(".stats");
 const statCounters = [...document.querySelectorAll("[data-counter]")];
@@ -563,20 +649,26 @@ function animateStats() {
   }
 
   const duration = 1400;
+  const staggerDelay = 150;
   const startTime = performance.now();
 
   function updateStats(now) {
-    const progress = Math.min((now - startTime) / duration, 1);
-    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    const elapsed = now - startTime;
 
-    statCounters.forEach((element) => {
+    statCounters.forEach((element, index) => {
+      const progress = Math.min(
+        Math.max((elapsed - index * staggerDelay) / duration, 0),
+        1
+      );
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
       const start = Number(element.dataset.start);
       const target = Number(element.dataset.target);
       const value = start + (target - start) * easedProgress;
       element.textContent = formatStatValue(element, value, progress === 1);
     });
 
-    if (progress < 1) requestAnimationFrame(updateStats);
+    const totalDuration = duration + (statCounters.length - 1) * staggerDelay;
+    if (elapsed < totalDuration) requestAnimationFrame(updateStats);
   }
 
   requestAnimationFrame(updateStats);
@@ -595,9 +687,30 @@ if (reducedMotion.matches) {
       statsObserver.unobserve(stats);
       animateStats();
     },
-    { threshold: 0.35 }
+    { threshold: 0.45, rootMargin: "0px 0px -25% 0px" }
   );
   statsObserver.observe(stats);
+}
+
+const workflow = document.querySelector(".workflow");
+
+if (!reducedMotion.matches) {
+  workflow.classList.add("has-card-stagger");
+
+  const workflowObserver = new IntersectionObserver(
+    ([entry]) => {
+      if (!entry.isIntersecting) return;
+      workflowObserver.unobserve(workflow);
+      workflow.classList.add("is-card-staggered");
+
+      window.setTimeout(() => {
+        workflow.classList.remove("has-card-stagger", "is-card-staggered");
+      }, 800);
+    },
+    { threshold: 0.35, rootMargin: "0px 0px -25% 0px" }
+  );
+
+  workflowObserver.observe(workflow);
 }
 
 const contactToggle = document.querySelector(".contact-toggle");

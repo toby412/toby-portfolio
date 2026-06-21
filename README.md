@@ -11,7 +11,6 @@ Open `index.html` directly in a browser.
 - Main page copy: `index.html`
 - Project cards and Vimeo links: `src/main.js`
 - Visual design and responsive layout: `src/styles.css`
-- Reference screenshots and copied section code: `for codex/`
 
 ## Replace Placeholder Videos
 
