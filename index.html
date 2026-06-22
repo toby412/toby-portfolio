@@ -263,39 +263,40 @@
           </div>
 
           <form class="contact-panel contact-form" aria-hidden="true">
-            <h3>Send a Message</h3>
-            <label>
-              <span class="sr-only">Your Name</span>
-              <input name="from_name" type="text" placeholder="Your Name" autocomplete="name" required />
-            </label>
-            <label>
-              <span class="sr-only">Your Email</span>
-              <input name="from_email" type="email" placeholder="Your Email" autocomplete="email" required />
-            </label>
-            <label>
-              <span class="sr-only">Company</span>
-              <input name="company" type="text" placeholder="Company (Optional)" autocomplete="organization" />
-            </label>
-            <label>
-              <span class="sr-only">Project Type</span>
-              <input name="project_type" type="text" placeholder="Project Type (Optional)" />
-            </label>
-            <label>
-              <span class="sr-only">Budget</span>
-              <input name="budget" type="text" placeholder="Budget (Optional)" />
-            </label>
-            <label>
-              <span class="sr-only">Project details</span>
-              <textarea name="message" placeholder="Tell me about your project..." required></textarea>
-            </label>
-            <button class="form-submit" type="submit">
-              <span>Send Message</span>
+            <div class="contact-form-content">
+              <h3>Send a Message</h3>
+              <label>
+                <span class="sr-only">Your Name</span>
+                <input name="from_name" type="text" placeholder="Your Name" autocomplete="name" required />
+              </label>
+              <label>
+                <span class="sr-only">Your Email</span>
+                <input name="from_email" type="email" placeholder="Your Email" autocomplete="email" required />
+              </label>
+              <label>
+                <span class="sr-only">Budget</span>
+                <input name="budget" type="text" placeholder="Budget (Optional)" />
+              </label>
+              <label>
+                <span class="sr-only">Project details</span>
+                <textarea name="message" placeholder="Tell me about your project..." required></textarea>
+              </label>
+              <button class="form-submit" type="submit">
+                <span>Send Message</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 17 17 7"></path>
+                  <path d="M7 7h10v10"></path>
+                </svg>
+              </button>
+              <p class="form-status" aria-live="polite"></p>
+            </div>
+            <div class="contact-success" role="status" aria-live="polite" aria-atomic="true">
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 17 17 7"></path>
-                <path d="M7 7h10v10"></path>
+                <path d="m5 12 4 4L19 6"></path>
               </svg>
-            </button>
-            <p class="form-status" aria-live="polite"></p>
+              <p class="contact-success-title" data-success-title></p>
+              <p class="contact-success-copy" data-success-copy></p>
+            </div>
           </form>
         </div>
       </section>

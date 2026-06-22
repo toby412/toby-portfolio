@@ -974,6 +974,109 @@ h1 span {
   border-radius: 18px;
   background: #ffffff;
   padding: 26px;
+  transition:
+    opacity 320ms var(--ease-premium),
+    transform 420ms var(--ease-premium),
+    visibility 320ms var(--ease-premium),
+    background-color 400ms var(--ease-premium),
+    border-color 400ms var(--ease-premium),
+    box-shadow 400ms var(--ease-premium);
+}
+
+.contact-form-content {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+  transition:
+    opacity 400ms var(--ease-premium),
+    filter 400ms var(--ease-premium),
+    transform 400ms var(--ease-premium);
+  will-change: opacity, filter, transform;
+}
+
+.contact-form.is-success {
+  border-color: rgba(245, 163, 26, 0.2);
+  background-color: #faf5ea;
+  box-shadow: 0 18px 44px rgba(37, 32, 24, 0.075);
+}
+
+.contact-form.is-success .contact-form-content {
+  filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+.contact-success {
+  position: absolute;
+  inset: 26px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+  transform: translateY(12px) scale(0.96);
+  transition:
+    opacity 480ms var(--ease-premium),
+    transform 480ms var(--ease-premium);
+  will-change: opacity, transform;
+}
+
+.contact-form.is-success .contact-success {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.contact-success svg {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background: rgba(245, 163, 26, 0.1);
+  padding: 13px;
+  fill: none;
+  stroke: var(--accent-strong);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+  opacity: 0;
+  transform: scale(0.86);
+  transition:
+    opacity 420ms var(--ease-premium),
+    transform 480ms var(--ease-premium);
+}
+
+.contact-success svg path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset 480ms var(--ease-premium);
+}
+
+.contact-form.is-success .contact-success svg {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 80ms;
+}
+
+.contact-form.is-success .contact-success svg path {
+  stroke-dashoffset: 0;
+  transition-delay: 120ms;
+}
+
+.contact-success-title {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.contact-success-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .contact-form h3 {
@@ -1192,6 +1295,7 @@ h1 span {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     animation-duration: 0.01ms !important;
   }
 }
