@@ -726,6 +726,7 @@ const contactSwitcher = document.querySelector(".contact-switcher");
 const contactSocials = document.querySelector(".contact-socials");
 const contactForm = document.querySelector(".contact-form");
 const formStatus = document.querySelector(".form-status");
+const formSubmitButton = contactForm.querySelector(".form-submit");
 
 function sizeContactPanel() {
   const activePanel = contactSwitcher.classList.contains("is-form")
@@ -747,17 +748,37 @@ contactToggle.addEventListener("click", () => {
   if (showForm) contactForm.querySelector("input").focus({ preventScroll: true });
 });
 
-contactForm.addEventListener("submit", (event) => {
+contactForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const data = new FormData(contactForm);
-  const name = data.get("name");
-  const email = data.get("email");
-  const message = data.get("message");
-  const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
-  const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+  if (!contactForm.reportValidity()) return;
 
-  formStatus.textContent = "Opening your email app...";
-  window.location.href = `mailto:hoger963852@gmail.com?subject=${subject}&body=${body}`;
+  const data = new FormData(contactForm);
+  const templateParams = {
+    from_name: String(data.get("from_name") ?? "").trim(),
+    from_email: String(data.get("from_email") ?? "").trim(),
+    company: String(data.get("company") ?? "").trim(),
+    project_type: String(data.get("project_type") ?? "").trim(),
+    budget: String(data.get("budget") ?? "").trim(),
+    message: String(data.get("message") ?? "").trim(),
+  };
+
+  formStatus.textContent = "Sending...";
+  formSubmitButton.disabled = true;
+  formSubmitButton.setAttribute("aria-busy", "true");
+
+  try {
+    if (!window.emailjs) throw new Error("EmailJS SDK failed to load");
+    await window.emailjs.send("service_portfolio", "template_pm58y13", templateParams);
+    contactForm.reset();
+    formStatus.textContent = "Thanks — your message has been sent. I’ll get back to you soon.";
+  } catch (error) {
+    console.error("EmailJS send failed:", error);
+    formStatus.textContent = "Something went wrong. Please try again or email me directly.";
+  } finally {
+    formSubmitButton.disabled = false;
+    formSubmitButton.removeAttribute("aria-busy");
+    requestAnimationFrame(sizeContactPanel);
+  }
 });
 
 const contactPanelObserver = new ResizeObserver(() => sizeContactPanel());

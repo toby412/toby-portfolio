@@ -266,11 +266,23 @@
             <h3>Send a Message</h3>
             <label>
               <span class="sr-only">Your Name</span>
-              <input name="name" type="text" placeholder="Your Name" autocomplete="name" required />
+              <input name="from_name" type="text" placeholder="Your Name" autocomplete="name" required />
             </label>
             <label>
               <span class="sr-only">Your Email</span>
-              <input name="email" type="email" placeholder="Your Email" autocomplete="email" required />
+              <input name="from_email" type="email" placeholder="Your Email" autocomplete="email" required />
+            </label>
+            <label>
+              <span class="sr-only">Company</span>
+              <input name="company" type="text" placeholder="Company (Optional)" autocomplete="organization" />
+            </label>
+            <label>
+              <span class="sr-only">Project Type</span>
+              <input name="project_type" type="text" placeholder="Project Type (Optional)" />
+            </label>
+            <label>
+              <span class="sr-only">Budget</span>
+              <input name="budget" type="text" placeholder="Budget (Optional)" />
             </label>
             <label>
               <span class="sr-only">Project details</span>
@@ -318,6 +330,12 @@
       </div>
     </dialog>
 
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+      if (window.emailjs) {
+        window.emailjs.init({ publicKey: "PSLVaeR7Fv7l-KVyg" });
+      }
+    </script>
     <script defer src="src/main.js"></script>
   </body>
 </html>
