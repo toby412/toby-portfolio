@@ -1,3 +1,7 @@
+import { initializeAnalytics } from "./analytics.js";
+
+initializeAnalytics();
+
 const projects = [
   {
     id: "showreel",
