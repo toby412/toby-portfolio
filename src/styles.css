@@ -612,19 +612,40 @@ h1 span {
   line-height: 1.6;
 }
 
-/* Brand & Commercial visual experiment — remove this block and its matching markup to revert. */
-.category-heading--commercial {
+/* ---------------------------------------------------------------------------
+   Unified video showcase
+   One featured player + a secondary rail, shared by all three work categories.
+   Per-category variation is expressed through modifiers and the two custom
+   properties below, so the three sections stay one component.
+   --------------------------------------------------------------------------- */
+
+.category-heading--showcase {
   max-width: 1000px;
   margin-right: auto;
   margin-left: auto;
   text-align: left;
 }
 
-.category-heading--commercial .category-description {
+.category-heading--showcase .category-description {
   margin-left: 0;
 }
 
-.commercial-showcase {
+/* Shorts & Reels anchors to the right instead of the left. */
+.category-heading--right {
+  max-width: 700px;
+  margin-right: 0;
+  margin-left: auto;
+  text-align: right;
+}
+
+.category-heading--right .category-description {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.video-showcase {
+  --feature-ratio: 16 / 9;
+  --card-ratio: 16 / 9;
   display: grid;
   grid-template-columns: minmax(0, 1.42fr) minmax(220px, 0.78fr);
   gap: clamp(18px, 2.6vw, 34px);
@@ -633,32 +654,61 @@ h1 span {
   margin: 0 auto;
 }
 
-.commercial-feature {
+/* Shorts & Reels: vertical media, mirrored columns, anchored to the right edge
+   of the section shell. Only the alignment changes — spacing, controls and
+   interaction stay identical to the other two showcases. */
+.video-showcase--shorts {
+  --feature-ratio: 9 / 16;
+  --card-ratio: 9 / 16;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  width: min(700px, 100%);
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.video-showcase--shorts .showcase-feature {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.video-showcase--shorts .showcase-secondary-panel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.showcase-feature {
   position: relative;
   overflow: hidden;
   width: 100%;
   min-width: 0;
-  aspect-ratio: 16 / 9;
+  /* align-self keeps Safari from resolving this item's width from the row
+     height its aspect-ratio would otherwise be stretched to. */
+  align-self: start;
+  height: auto;
+  aspect-ratio: var(--feature-ratio);
   border-radius: var(--radius);
   background: #151411;
   box-shadow: 0 16px 42px rgba(37, 32, 24, 0.1);
 }
 
-.commercial-feature iframe {
+.showcase-feature iframe {
   display: block;
   width: 100%;
   height: 100%;
   border: 0;
+  /* Ambient player: the audio toggle is its only control. Blocking pointer
+     events also keeps YouTube from painting its title and hover chrome. */
+  pointer-events: none;
 }
 
-.commercial-feature-controls {
+.showcase-feature-controls {
   position: absolute;
   right: 12px;
   bottom: 12px;
   z-index: 2;
 }
 
-.commercial-audio-toggle {
+.feature-audio-toggle {
   display: inline-flex;
   min-height: 32px;
   align-items: center;
@@ -681,18 +731,18 @@ h1 span {
     transform 220ms var(--ease-premium);
 }
 
-.commercial-audio-toggle:hover {
+.feature-audio-toggle:hover {
   border-color: rgba(255, 255, 255, 0.62);
   background: rgba(25, 24, 22, 0.76);
   transform: translateY(-1px);
 }
 
-.commercial-audio-toggle.is-audio-on {
+.feature-audio-toggle.is-audio-on {
   border-color: rgba(245, 163, 26, 0.78);
   background: rgba(241, 139, 0, 0.85);
 }
 
-.commercial-audio-toggle svg {
+.feature-audio-toggle svg {
   width: 14px;
   height: 14px;
   fill: none;
@@ -702,30 +752,32 @@ h1 span {
   stroke-width: 1.8;
 }
 
-.commercial-audio-toggle.is-audio-on svg path:last-child {
+.feature-audio-toggle.is-audio-on svg path:last-child {
   display: none;
 }
 
-.commercial-secondary-panel {
+.showcase-secondary-panel {
   display: flex;
+  min-width: 0;
   min-height: 0;
   flex-direction: column;
   justify-content: flex-end;
-  min-width: 0;
 }
 
-.commercial-secondary-shell {
+.showcase-secondary-shell {
   position: relative;
   min-width: 0;
   padding: 0 28px;
 }
 
-.commercial-secondary {
+.showcase-secondary {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(220px, 1fr);
   gap: 16px;
   width: 100%;
+  /* Negative margin lets the cards' hover lift and shadow escape the rail
+     without the scroll container clipping them. */
   margin: -18px 0;
   padding: 18px 2px;
   overflow-x: auto;
@@ -734,15 +786,22 @@ h1 span {
   -webkit-overflow-scrolling: touch;
 }
 
-.commercial-secondary::-webkit-scrollbar {
+.showcase-secondary::-webkit-scrollbar {
   display: none;
 }
 
-.commercial-secondary .project-card {
+/* A fixed track (not minmax) keeps the two reels from shrinking to fit, so this
+   rail overflows and its arrows stay live like the other two showcases. */
+.video-showcase--shorts .showcase-secondary {
+  grid-auto-columns: 160px;
+}
+
+.showcase-secondary .project-card {
+  aspect-ratio: var(--card-ratio);
   box-shadow: 0 10px 28px rgba(37, 32, 24, 0.055);
 }
 
-.commercial-more {
+.showcase-more {
   display: grid;
   justify-items: start;
   gap: 8px;
@@ -750,14 +809,14 @@ h1 span {
   color: var(--accent-strong);
 }
 
-.commercial-more span {
+.showcase-more span {
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
-.commercial-more svg {
+.showcase-more svg {
   width: min(100%, 172px);
   height: auto;
   overflow: visible;
@@ -767,38 +826,32 @@ h1 span {
   stroke-width: 1.3;
 }
 
-.commercial-secondary-shell .carousel-arrow {
+.showcase-secondary-shell .carousel-arrow {
   top: 50%;
   opacity: 0.42;
 }
 
-.commercial-secondary-shell .carousel-arrow--previous {
+.showcase-secondary-shell .carousel-arrow--previous {
   left: 0;
 }
 
-.commercial-secondary-shell .carousel-arrow--next {
+.showcase-secondary-shell .carousel-arrow--next {
   right: 0;
 }
 
-.commercial-secondary-shell:hover .carousel-arrow,
-.commercial-secondary-shell:focus-within .carousel-arrow {
+.showcase-secondary-shell:hover .carousel-arrow,
+.showcase-secondary-shell:focus-within .carousel-arrow {
   opacity: 0.72;
 }
 
-.commercial-secondary-shell .carousel-arrow:disabled {
+.showcase-secondary-shell .carousel-arrow:hover,
+.showcase-secondary-shell .carousel-arrow:focus-visible {
+  opacity: 0.95;
+}
+
+.showcase-secondary-shell .carousel-arrow:disabled {
   opacity: 0.12;
   cursor: default;
-}
-
-.carousel-shell {
-  position: relative;
-  width: min(1000px, 100%);
-  margin: 0 auto;
-  background: transparent;
-}
-
-.three-up-carousel {
-  width: min(900px, 100%);
 }
 
 .carousel-arrow {
@@ -819,28 +872,12 @@ h1 span {
   transition: opacity 220ms var(--ease-premium);
 }
 
-.carousel-shell:hover .carousel-arrow,
-.carousel-shell:focus-within .carousel-arrow {
-  opacity: 0.48;
-}
-
 .carousel-arrow--previous {
   left: 0;
 }
 
 .carousel-arrow--next {
   right: 0;
-}
-
-.carousel-shell .carousel-arrow:hover,
-.carousel-shell .carousel-arrow:focus-visible {
-  opacity: 0.86;
-}
-
-.carousel-shell:hover .carousel-arrow:disabled,
-.carousel-shell:focus-within .carousel-arrow:disabled {
-  opacity: 0.08;
-  cursor: default;
 }
 
 .carousel-arrow svg {
@@ -857,39 +894,6 @@ h1 span {
   .carousel-arrow {
     opacity: 0.36;
   }
-}
-
-.project-grid {
-  display: grid;
-  grid-auto-flow: column;
-  gap: 22px;
-  width: min(940px, 100%);
-  margin: -32px auto;
-  padding: 32px 0;
-  overflow-x: auto;
-  background: transparent;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.project-grid::-webkit-scrollbar {
-  display: none;
-}
-
-.project-grid > * {
-  min-width: 0;
-}
-
-.project-grid.two-up {
-  grid-template-columns: none;
-  grid-auto-columns: 44.5%;
-}
-
-.project-grid.three-up {
-  grid-template-columns: none;
-  grid-auto-columns: 250px;
-  width: min(840px, 100%);
 }
 
 .project-card {
@@ -912,11 +916,6 @@ h1 span {
 .project-card:hover,
 .project-card:focus-visible {
   transform: translateY(-4px) scale(1.01);
-}
-
-.three-up .project-card {
-  min-height: 0;
-  aspect-ratio: 9 / 16;
 }
 
 .project-visual {
@@ -1517,30 +1516,26 @@ h1 span {
     white-space: normal;
   }
 
-  .project-grid.two-up {
-    grid-auto-columns: min(82vw, 420px);
-  }
-
-  .commercial-showcase {
+  .video-showcase {
     grid-template-columns: minmax(0, 1fr) minmax(190px, 0.55fr);
     gap: 16px;
   }
 
-  .commercial-secondary {
+  .video-showcase--shorts {
+    grid-template-columns: minmax(0, 1fr) 210px;
+    width: min(560px, 100%);
+  }
+
+  .showcase-secondary {
     grid-auto-columns: min(50vw, 260px);
     gap: 12px;
   }
 
-  .project-grid.three-up {
-    width: 100%;
-    grid-auto-columns: min(72vw, 260px);
+  .video-showcase--shorts .showcase-secondary {
+    grid-auto-columns: min(30vw, 150px);
   }
 
   .project-card {
-    min-height: 0;
-  }
-
-  .three-up .project-card {
     min-height: 0;
   }
 
@@ -1614,19 +1609,51 @@ h1 span {
     padding: 12px 15px;
   }
 
-  .commercial-showcase {
+  .video-showcase,
+  .video-showcase--shorts {
     grid-template-columns: 1fr;
     gap: 18px;
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
   }
 
-  .commercial-secondary-panel {
+  /* Stacked: the mirrored Shorts columns fall back to document order so the
+     featured reel still leads, and the tall 9:16 feature stays centred. */
+  .video-showcase--shorts .showcase-feature,
+  .video-showcase--shorts .showcase-secondary-panel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .video-showcase--shorts .showcase-feature {
+    width: min(100%, 260px);
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .category-heading--right {
+    max-width: none;
+    margin-right: auto;
+    text-align: left;
+  }
+
+  .category-heading--right .category-description {
+    margin-left: 0;
+  }
+
+  .showcase-secondary-panel {
     display: block;
   }
 
-  .commercial-secondary {
+  .showcase-secondary {
     grid-auto-columns: min(78vw, 310px);
     margin-top: -4px;
     margin-bottom: -18px;
+  }
+
+  .video-showcase--shorts .showcase-secondary {
+    grid-auto-columns: min(52vw, 220px);
   }
 
   .contact-actions {

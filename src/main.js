@@ -219,17 +219,12 @@ logYouTubeDebug(
 );
 logYouTubeDebug("Known public test video", youtubeDebugProject.video);
 
-function projectCard(project, isClone = false) {
+function projectCard(project) {
   const button = document.createElement("button");
   button.className = `project-card tone-${project.tone}`;
   button.type = "button";
   button.dataset.video = project.id;
   button.setAttribute("aria-label", `Play ${project.title}`);
-  if (isClone) {
-    button.classList.add("project-card-clone");
-    button.tabIndex = -1;
-    button.setAttribute("aria-hidden", "true");
-  }
   button.innerHTML = `
     <span class="project-visual" aria-hidden="true">
       <img class="project-thumbnail" alt="" loading="lazy" decoding="async" />
@@ -260,39 +255,38 @@ function projectCard(project, isClone = false) {
   return button;
 }
 
-document.querySelectorAll("[data-category]").forEach((container) => {
-  const excludedProjectId = container.dataset.exclude;
-  const categoryProjects = projects.filter((project) => {
-    return project.category === container.dataset.category && project.id !== excludedProjectId;
-  });
+/* ---------------------------------------------------------------------------
+   Unified video showcase
+   Every work category renders the same component: one ambient featured player
+   with an audio toggle, plus a finite click-to-play rail of the remaining
+   videos. Categories differ only in markup modifiers and CSS, never here.
+   --------------------------------------------------------------------------- */
 
-  // The commercial visual experiment is intentionally a finite, click-to-play rail.
-  if (container.classList.contains("commercial-secondary")) {
-    categoryProjects.forEach((project) => {
-      const item = document.createElement("div");
-      item.className = "commercial-secondary-item";
-      item.append(projectCard(project));
-      container.append(item);
+// Both providers are driven the same way: an autoplaying, looping, chrome-less
+// embed whose src is rebuilt to flip the mute flag. Reloading the src keeps the
+// providers' own reliable autoplay path instead of layering a player SDK on top.
+function getFeatureEmbedUrl(videoUrl, isMuted) {
+  if (getVideoProvider(videoUrl) === "youtube") {
+    const videoId = getYouTubeVideoId(videoUrl);
+    const parameters = new URLSearchParams({
+      autoplay: "1",
+      mute: isMuted ? "1" : "0",
+      // YouTube only loops a single video when it is its own one-item playlist.
+      loop: "1",
+      playlist: videoId,
+      controls: "0",
+      disablekb: "1",
+      modestbranding: "1",
+      iv_load_policy: "3",
+      playsinline: "1",
+      rel: "0",
     });
-    return;
+    const pageOrigin = window.location.origin;
+    if (pageOrigin && pageOrigin !== "null") parameters.set("origin", pageOrigin);
+    return `https://www.youtube-nocookie.com/embed/${videoId}?${parameters.toString()}`;
   }
 
-  container.dataset.originalCount = String(categoryProjects.length);
-
-  for (let setIndex = 0; setIndex < 3; setIndex += 1) {
-    categoryProjects.forEach((project) => {
-      container.append(projectCard(project, setIndex !== 1));
-    });
-  }
-});
-
-// The Vimeo background embed handles autoplay and looping natively. Reloading it on an
-// audio change keeps that reliable path intact while still allowing an explicit unmute.
-const featuredCommercialPlayer = document.querySelector(".commercial-feature iframe");
-const featuredAudioToggle = document.querySelector(".commercial-audio-toggle");
-let featuredCommercialMuted = true;
-
-function getFeaturedCommercialEmbedUrl(isMuted) {
+  const videoId = getVimeoVideoId(videoUrl);
   const parameters = new URLSearchParams({
     background: "1",
     autoplay: "1",
@@ -305,43 +299,73 @@ function getFeaturedCommercialEmbedUrl(isMuted) {
     byline: "0",
     portrait: "0",
   });
-  return `https://player.vimeo.com/video/1195101228?${parameters.toString()}`;
+  return `https://player.vimeo.com/video/${videoId}?${parameters.toString()}`;
 }
 
-function setFeaturedCommercialMuted(isMuted) {
-  featuredCommercialMuted = isMuted;
-  if (featuredCommercialPlayer && featuredCommercialPlayer.src !== getFeaturedCommercialEmbedUrl(isMuted)) {
-    featuredCommercialPlayer.src = getFeaturedCommercialEmbedUrl(isMuted);
-  }
-  if (!featuredAudioToggle) return;
-  featuredAudioToggle.setAttribute("aria-pressed", String(!isMuted));
-  featuredAudioToggle.setAttribute(
-    "aria-label",
-    isMuted ? "Turn featured video audio on" : "Turn featured video audio off"
-  );
-  featuredAudioToggle.querySelector("span").textContent = isMuted ? "Audio Off" : "Audio On";
-  featuredAudioToggle.classList.toggle("is-audio-on", !isMuted);
+function initializeFeature(featureElement) {
+  const project = projects.find((item) => item.id === featureElement.dataset.feature);
+  if (!project) return;
+
+  const isYouTube = getVideoProvider(project.video) === "youtube";
+  const frame = document.createElement("iframe");
+  frame.title = project.title;
+  frame.allow = isYouTube
+    ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    : "autoplay; encrypted-media; fullscreen; picture-in-picture";
+  if (isYouTube) frame.referrerPolicy = "strict-origin-when-cross-origin";
+  frame.setAttribute("allowfullscreen", "");
+  frame.setAttribute("tabindex", "-1");
+  frame.src = getFeatureEmbedUrl(project.video, true);
+  featureElement.prepend(frame);
+
+  const toggle = featureElement.querySelector(".feature-audio-toggle");
+  if (!toggle) return;
+  let isMuted = true;
+
+  toggle.addEventListener("click", () => {
+    isMuted = !isMuted;
+    const nextSource = getFeatureEmbedUrl(project.video, isMuted);
+    if (frame.src !== nextSource) frame.src = nextSource;
+    toggle.setAttribute("aria-pressed", String(!isMuted));
+    toggle.setAttribute(
+      "aria-label",
+      isMuted ? "Turn featured video audio on" : "Turn featured video audio off"
+    );
+    toggle.querySelector("span").textContent = isMuted ? "Audio Off" : "Audio On";
+    toggle.classList.toggle("is-audio-on", !isMuted);
+  });
 }
 
-featuredAudioToggle?.addEventListener("click", () => {
-  setFeaturedCommercialMuted(!featuredCommercialMuted);
+document.querySelectorAll(".showcase-feature").forEach(initializeFeature);
+
+// The rails are deliberately finite click-to-play strips rather than looping
+// carousels: each holds only the two videos left over after the featured one,
+// a count at which a cloned infinite loop reads as broken.
+document.querySelectorAll(".showcase-secondary").forEach((rail) => {
+  const excludedProjectId = rail.dataset.exclude;
+  projects
+    .filter(
+      (project) =>
+        project.category === rail.dataset.category && project.id !== excludedProjectId
+    )
+    .forEach((project) => rail.append(projectCard(project)));
 });
 
-document.querySelectorAll(".commercial-secondary-shell").forEach((shell) => {
-  const row = shell.querySelector(".commercial-secondary");
+document.querySelectorAll(".showcase-secondary-shell").forEach((shell) => {
+  const rail = shell.querySelector(".showcase-secondary");
   const previousButton = shell.querySelector(".carousel-arrow--previous");
   const nextButton = shell.querySelector(".carousel-arrow--next");
 
   function updateArrowState() {
-    previousButton.disabled = row.scrollLeft <= 1;
-    nextButton.disabled = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
+    previousButton.disabled = rail.scrollLeft <= 1;
+    nextButton.disabled = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 1;
   }
 
   function scrollRail(direction) {
-    const item = row.querySelector(".commercial-secondary-item");
-    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
-    const distance = (item?.getBoundingClientRect().width || row.clientWidth) + gap;
-    row.scrollBy({
+    const card = rail.querySelector(".project-card");
+    const gap = parseFloat(getComputedStyle(rail).columnGap) || 0;
+    const distance = (card?.getBoundingClientRect().width || rail.clientWidth) + gap;
+    rail.scrollBy({
       left: direction * distance,
       behavior: reducedMotion.matches ? "auto" : "smooth",
     });
@@ -349,128 +373,9 @@ document.querySelectorAll(".commercial-secondary-shell").forEach((shell) => {
 
   previousButton.addEventListener("click", () => scrollRail(-1));
   nextButton.addEventListener("click", () => scrollRail(1));
-  row.addEventListener("scroll", updateArrowState, { passive: true });
-  new ResizeObserver(updateArrowState).observe(row);
+  rail.addEventListener("scroll", updateArrowState, { passive: true });
+  new ResizeObserver(updateArrowState).observe(rail);
   requestAnimationFrame(updateArrowState);
-});
-
-document.querySelectorAll(".carousel-shell").forEach((carousel) => {
-  const row = carousel.querySelector(".project-grid");
-  const previousButton = carousel.querySelector(".carousel-arrow--previous");
-  const nextButton = carousel.querySelector(".carousel-arrow--next");
-  const originalCount = Number(row.dataset.originalCount);
-  let originalStart = 0;
-  let setSpan = 0;
-  let targetScrollLeft = row.scrollLeft;
-  let arrowFrame = null;
-
-  function measureLoop() {
-    const cards = row.querySelectorAll(".project-card");
-    const firstOriginal = cards[originalCount];
-    const firstTrailingClone = cards[originalCount * 2];
-    if (!firstOriginal || !firstTrailingClone) return;
-
-    const rowLeft = row.getBoundingClientRect().left;
-    originalStart =
-      row.scrollLeft + firstOriginal.getBoundingClientRect().left - rowLeft;
-    setSpan =
-      firstTrailingClone.getBoundingClientRect().left -
-      firstOriginal.getBoundingClientRect().left;
-  }
-
-  function updateArrowState() {
-    const unavailable = originalCount <= 1;
-    previousButton.disabled = unavailable;
-    nextButton.disabled = unavailable;
-  }
-
-  function normalizeLoopPosition() {
-    if (!setSpan) return;
-    const lowerBoundary = originalStart - setSpan * 0.5;
-    const upperBoundary = originalStart + setSpan * 0.5;
-
-    if (row.scrollLeft < lowerBoundary) {
-      row.scrollLeft += setSpan;
-      targetScrollLeft += setSpan;
-    } else if (row.scrollLeft > upperBoundary) {
-      row.scrollLeft -= setSpan;
-      targetScrollLeft -= setSpan;
-    }
-  }
-
-  function animateArrowScroll() {
-    const distance = targetScrollLeft - row.scrollLeft;
-    if (Math.abs(distance) < 0.5) {
-      row.scrollLeft = targetScrollLeft;
-      normalizeLoopPosition();
-      arrowFrame = null;
-      return;
-    }
-
-    row.scrollLeft += distance * 0.16;
-    normalizeLoopPosition();
-    arrowFrame = requestAnimationFrame(animateArrowScroll);
-  }
-
-  function scrollToPosition(position) {
-    targetScrollLeft = position;
-    if (reducedMotion.matches) {
-      row.scrollLeft = targetScrollLeft;
-      normalizeLoopPosition();
-      return;
-    }
-    if (arrowFrame === null) arrowFrame = requestAnimationFrame(animateArrowScroll);
-  }
-
-  function cancelAnimatedScroll() {
-    if (arrowFrame !== null) cancelAnimationFrame(arrowFrame);
-    arrowFrame = null;
-    targetScrollLeft = row.scrollLeft;
-  }
-
-  function cardScrollDistance() {
-    const card = row.querySelector(".project-card");
-    if (!card) return row.clientWidth;
-    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
-    return card.getBoundingClientRect().width + gap;
-  }
-
-  row.addEventListener(
-    "wheel",
-    (event) => {
-      if (Math.abs(event.deltaX) <= Math.abs(event.deltaY)) return;
-      if (arrowFrame !== null) cancelAnimatedScroll();
-    },
-    { passive: true }
-  );
-
-  row.addEventListener("scroll", normalizeLoopPosition, { passive: true });
-  row.addEventListener("pointerdown", cancelAnimatedScroll, { passive: true });
-
-  previousButton.addEventListener("click", () => {
-    const start = arrowFrame === null ? row.scrollLeft : targetScrollLeft;
-    scrollToPosition(start - cardScrollDistance());
-  });
-
-  nextButton.addEventListener("click", () => {
-    const start = arrowFrame === null ? row.scrollLeft : targetScrollLeft;
-    scrollToPosition(start + cardScrollDistance());
-  });
-
-  new ResizeObserver(() => {
-    cancelAnimatedScroll();
-    measureLoop();
-    row.scrollLeft = originalStart;
-    targetScrollLeft = originalStart;
-    updateArrowState();
-  }).observe(row);
-
-  requestAnimationFrame(() => {
-    measureLoop();
-    row.scrollLeft = originalStart;
-    targetScrollLeft = originalStart;
-    updateArrowState();
-  });
 });
 
 function openVideo(projectId) {
