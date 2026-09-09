@@ -261,9 +261,22 @@ function projectCard(project, isClone = false) {
 }
 
 document.querySelectorAll("[data-category]").forEach((container) => {
-  const categoryProjects = projects.filter(
-    (project) => project.category === container.dataset.category
-  );
+  const excludedProjectId = container.dataset.exclude;
+  const categoryProjects = projects.filter((project) => {
+    return project.category === container.dataset.category && project.id !== excludedProjectId;
+  });
+
+  // The commercial visual experiment is intentionally a finite, click-to-play rail.
+  if (container.classList.contains("commercial-secondary")) {
+    categoryProjects.forEach((project) => {
+      const item = document.createElement("div");
+      item.className = "commercial-secondary-item";
+      item.append(projectCard(project));
+      container.append(item);
+    });
+    return;
+  }
+
   container.dataset.originalCount = String(categoryProjects.length);
 
   for (let setIndex = 0; setIndex < 3; setIndex += 1) {
@@ -271,6 +284,74 @@ document.querySelectorAll("[data-category]").forEach((container) => {
       container.append(projectCard(project, setIndex !== 1));
     });
   }
+});
+
+// The Vimeo background embed handles autoplay and looping natively. Reloading it on an
+// audio change keeps that reliable path intact while still allowing an explicit unmute.
+const featuredCommercialPlayer = document.querySelector(".commercial-feature iframe");
+const featuredAudioToggle = document.querySelector(".commercial-audio-toggle");
+let featuredCommercialMuted = true;
+
+function getFeaturedCommercialEmbedUrl(isMuted) {
+  const parameters = new URLSearchParams({
+    background: "1",
+    autoplay: "1",
+    loop: "1",
+    muted: isMuted ? "1" : "0",
+    autopause: "0",
+    playsinline: "1",
+    quality: "1080p",
+    title: "0",
+    byline: "0",
+    portrait: "0",
+  });
+  return `https://player.vimeo.com/video/1195101228?${parameters.toString()}`;
+}
+
+function setFeaturedCommercialMuted(isMuted) {
+  featuredCommercialMuted = isMuted;
+  if (featuredCommercialPlayer && featuredCommercialPlayer.src !== getFeaturedCommercialEmbedUrl(isMuted)) {
+    featuredCommercialPlayer.src = getFeaturedCommercialEmbedUrl(isMuted);
+  }
+  if (!featuredAudioToggle) return;
+  featuredAudioToggle.setAttribute("aria-pressed", String(!isMuted));
+  featuredAudioToggle.setAttribute(
+    "aria-label",
+    isMuted ? "Turn featured video audio on" : "Turn featured video audio off"
+  );
+  featuredAudioToggle.querySelector("span").textContent = isMuted ? "Audio Off" : "Audio On";
+  featuredAudioToggle.classList.toggle("is-audio-on", !isMuted);
+}
+
+featuredAudioToggle?.addEventListener("click", () => {
+  setFeaturedCommercialMuted(!featuredCommercialMuted);
+});
+
+document.querySelectorAll(".commercial-secondary-shell").forEach((shell) => {
+  const row = shell.querySelector(".commercial-secondary");
+  const previousButton = shell.querySelector(".carousel-arrow--previous");
+  const nextButton = shell.querySelector(".carousel-arrow--next");
+
+  function updateArrowState() {
+    previousButton.disabled = row.scrollLeft <= 1;
+    nextButton.disabled = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
+  }
+
+  function scrollRail(direction) {
+    const item = row.querySelector(".commercial-secondary-item");
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    const distance = (item?.getBoundingClientRect().width || row.clientWidth) + gap;
+    row.scrollBy({
+      left: direction * distance,
+      behavior: reducedMotion.matches ? "auto" : "smooth",
+    });
+  }
+
+  previousButton.addEventListener("click", () => scrollRail(-1));
+  nextButton.addEventListener("click", () => scrollRail(1));
+  row.addEventListener("scroll", updateArrowState, { passive: true });
+  new ResizeObserver(updateArrowState).observe(row);
+  requestAnimationFrame(updateArrowState);
 });
 
 document.querySelectorAll(".carousel-shell").forEach((carousel) => {

@@ -612,6 +612,184 @@ h1 span {
   line-height: 1.6;
 }
 
+/* Brand & Commercial visual experiment — remove this block and its matching markup to revert. */
+.category-heading--commercial {
+  max-width: 1000px;
+  margin-right: auto;
+  margin-left: auto;
+  text-align: left;
+}
+
+.category-heading--commercial .category-description {
+  margin-left: 0;
+}
+
+.commercial-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1.42fr) minmax(220px, 0.78fr);
+  gap: clamp(18px, 2.6vw, 34px);
+  align-items: stretch;
+  width: min(1000px, 100%);
+  margin: 0 auto;
+}
+
+.commercial-feature {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  background: #151411;
+  box-shadow: 0 16px 42px rgba(37, 32, 24, 0.1);
+}
+
+.commercial-feature iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.commercial-feature-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+}
+
+.commercial-audio-toggle {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(25, 24, 22, 0.56);
+  color: rgba(255, 255, 255, 0.94);
+  padding: 0 11px;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    background-color 220ms var(--ease-premium),
+    border-color 220ms var(--ease-premium),
+    transform 220ms var(--ease-premium);
+}
+
+.commercial-audio-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(25, 24, 22, 0.76);
+  transform: translateY(-1px);
+}
+
+.commercial-audio-toggle.is-audio-on {
+  border-color: rgba(245, 163, 26, 0.78);
+  background: rgba(241, 139, 0, 0.85);
+}
+
+.commercial-audio-toggle svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.commercial-audio-toggle.is-audio-on svg path:last-child {
+  display: none;
+}
+
+.commercial-secondary-panel {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.commercial-secondary-shell {
+  position: relative;
+  min-width: 0;
+  padding: 0 28px;
+}
+
+.commercial-secondary {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 16px;
+  width: 100%;
+  margin: -18px 0;
+  padding: 18px 2px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.commercial-secondary::-webkit-scrollbar {
+  display: none;
+}
+
+.commercial-secondary .project-card {
+  box-shadow: 0 10px 28px rgba(37, 32, 24, 0.055);
+}
+
+.commercial-more {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin: 0 28px 15px;
+  color: var(--accent-strong);
+}
+
+.commercial-more span {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.commercial-more svg {
+  width: min(100%, 172px);
+  height: auto;
+  overflow: visible;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.3;
+}
+
+.commercial-secondary-shell .carousel-arrow {
+  top: 50%;
+  opacity: 0.42;
+}
+
+.commercial-secondary-shell .carousel-arrow--previous {
+  left: 0;
+}
+
+.commercial-secondary-shell .carousel-arrow--next {
+  right: 0;
+}
+
+.commercial-secondary-shell:hover .carousel-arrow,
+.commercial-secondary-shell:focus-within .carousel-arrow {
+  opacity: 0.72;
+}
+
+.commercial-secondary-shell .carousel-arrow:disabled {
+  opacity: 0.12;
+  cursor: default;
+}
+
 .carousel-shell {
   position: relative;
   width: min(1000px, 100%);
@@ -1343,6 +1521,16 @@ h1 span {
     grid-auto-columns: min(82vw, 420px);
   }
 
+  .commercial-showcase {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 0.55fr);
+    gap: 16px;
+  }
+
+  .commercial-secondary {
+    grid-auto-columns: min(50vw, 260px);
+    gap: 12px;
+  }
+
   .project-grid.three-up {
     width: 100%;
     grid-auto-columns: min(72vw, 260px);
@@ -1424,6 +1612,21 @@ h1 span {
   .workflow li {
     grid-template-columns: 40px minmax(0, 1fr);
     padding: 12px 15px;
+  }
+
+  .commercial-showcase {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .commercial-secondary-panel {
+    display: block;
+  }
+
+  .commercial-secondary {
+    grid-auto-columns: min(78vw, 310px);
+    margin-top: -4px;
+    margin-bottom: -18px;
   }
 
   .contact-actions {

@@ -166,22 +166,62 @@
         <div class="section-shell">
           <h2 class="sr-only" id="work-title">Work</h2>
 
-          <div class="work-category reveal">
-            <div class="category-heading">
+          <!-- Brand & Commercial visual experiment: isolated from the shared carousels below. -->
+          <div class="work-category work-category--commercial reveal">
+            <div class="category-heading category-heading--commercial">
               <p class="eyebrow">Commercial Content</p>
               <h3><span class="heading-light">Brand</span> &amp; Commercial</h3>
               <p class="category-description">
                 High-impact commercial productions crafted for brands and campaigns.
               </p>
             </div>
-            <div class="carousel-shell two-up-carousel">
-              <button class="carousel-arrow carousel-arrow--previous" type="button" aria-label="Previous commercial project" aria-controls="commercial-carousel">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-              </button>
-              <div class="project-grid two-up" id="commercial-carousel" data-category="Commercial"></div>
-              <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next commercial project" aria-controls="commercial-carousel">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-              </button>
+            <div class="commercial-showcase">
+              <div class="commercial-feature">
+                <iframe
+                  title="Commercial Reel 3"
+                  src="https://player.vimeo.com/video/1195101228?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;autopause=0&amp;playsinline=1&amp;quality=1080p&amp;title=0&amp;byline=0&amp;portrait=0"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowfullscreen
+                ></iframe>
+                <div class="commercial-feature-controls">
+                  <button
+                    class="commercial-audio-toggle"
+                    type="button"
+                    aria-pressed="false"
+                    aria-label="Turn featured video audio on"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
+                      <path d="m17 9 4 6M21 9l-4 6"></path>
+                    </svg>
+                    <span>Audio Off</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="commercial-secondary-panel">
+                <div class="commercial-more" aria-hidden="true">
+                  <span>More</span>
+                  <svg viewBox="0 0 172 24" fill="none">
+                    <path d="M1 12h166M157 3l9 9-9 9"></path>
+                  </svg>
+                </div>
+                <div class="commercial-secondary-shell">
+                  <button class="carousel-arrow carousel-arrow--previous" type="button" aria-label="Previous commercial project" aria-controls="commercial-secondary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+                  </button>
+                  <div
+                    class="commercial-secondary"
+                    id="commercial-secondary"
+                    aria-label="More Brand and Commercial videos"
+                    data-category="Commercial"
+                    data-exclude="commercial-03"
+                  ></div>
+                  <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next commercial project" aria-controls="commercial-secondary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
