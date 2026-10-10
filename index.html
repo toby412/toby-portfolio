@@ -228,48 +228,7 @@
                 Vertical content for social media with catchy and viral editing.
               </p>
             </div>
-            <div class="video-showcase video-showcase--shorts">
-              <div class="showcase-feature" data-feature="short-02">
-                <div class="showcase-feature-controls">
-                  <button
-                    class="feature-audio-toggle"
-                    type="button"
-                    aria-pressed="false"
-                    aria-label="Turn featured video audio on"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
-                      <path d="m17 9 4 6M21 9l-4 6"></path>
-                    </svg>
-                    <span>Audio Off</span>
-                  </button>
-                </div>
-              </div>
-
-              <div class="showcase-secondary-panel">
-                <div class="showcase-more" aria-hidden="true">
-                  <span>More</span>
-                  <svg viewBox="0 0 172 24" fill="none">
-                    <path d="M1 12h166M157 3l9 9-9 9"></path>
-                  </svg>
-                </div>
-                <div class="showcase-secondary-shell">
-                  <button class="carousel-arrow carousel-arrow--previous" type="button" aria-label="Previous short-form project" aria-controls="shorts-secondary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
-                  </button>
-                  <div
-                    class="showcase-secondary"
-                    id="shorts-secondary"
-                    aria-label="More Shorts and Reels videos"
-                    data-category="Shorts &amp; Reels"
-                    data-exclude="short-02"
-                  ></div>
-                  <button class="carousel-arrow carousel-arrow--next" type="button" aria-label="Next short-form project" aria-controls="shorts-secondary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <div class="shorts-video-list" aria-label="Shorts and Reels videos"></div>
           </div>
 
           <div class="work-category reveal">
@@ -461,6 +420,13 @@
       <div class="modal-panel">
         <button class="modal-close" type="button" aria-label="Close video">×</button>
         <div class="video-frame" data-player></div>
+        <button class="feature-audio-toggle modal-audio-toggle" type="button" data-modal-audio hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
+            <path d="m17 9 4 6M21 9l-4 6"></path>
+          </svg>
+          <span>Audio Off</span>
+        </button>
       </div>
     </dialog>
 

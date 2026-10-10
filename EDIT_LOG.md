@@ -64,9 +64,10 @@ Nothing else hardcodes a video URL **except** the two background embeds noted be
 | `commercial-03` | Commercial Reel 3 | Commercial | Vimeo | `1195101228` | **Featured** — Brand & Commercial |
 | `commercial-02` | Commercial Reel 2 | Commercial | Vimeo | `1191103532` | Brand & Commercial rail |
 | `commercial-01` | Commercial Reel | Commercial | Vimeo | `1180459302` | Brand & Commercial rail |
-| `short-02` | Reel 02 | Shorts & Reels | Vimeo | `1165590282` | **Featured** — Shorts & Reels |
-| `short-01` | Reel 01 | Shorts & Reels | Vimeo | `1165586227` | Shorts & Reels rail |
-| `short-03` | Reel 03 | Shorts & Reels | Vimeo | `1167277734` | Shorts & Reels rail |
+| `short-01` | Reel 01 | Shorts & Reels | Vimeo | `1165586227` | Shorts direct row — rightmost |
+| `short-04` | Reel 04 | Shorts & Reels | Vimeo | `1234598390` | Shorts direct row — second from right |
+| `short-02` | Reel 02 | Shorts & Reels | Vimeo | `1165590282` | Shorts direct row — third from right |
+| `short-03` | Reel 03 | Shorts & Reels | Vimeo | `1167277734` | Shorts direct row — leftmost |
 | `documentary-01` | Film 01 | Documentary | YouTube | `NnY4RRX-n_0` | **Featured** — Films & Documentary |
 | `documentary-02` | Film 02 | Documentary | Vimeo | `1194363662` | Films & Documentary rail |
 | `documentary-03` | Film 03 | Documentary | YouTube | `ivhIMTe7Mu8` | Films & Documentary rail |
@@ -82,8 +83,9 @@ currently not rendered. Keep them populated for consistency; neither is load-bea
 
 ### 2.2 How sections are populated
 
-All three work categories render the **same component**, `.video-showcase`: one ambient featured
-player plus a finite rail of that category's remaining videos.
+Brand & Commercial and Films & Documentary render the shared `.video-showcase`: one ambient
+featured player plus a finite rail of that category's remaining videos. Shorts & Reels uses its
+own `.shorts-video-list` so all four ambient embeds can be visible without carousel controls.
 
 ```html
 <div class="video-showcase">                      <!-- + --shorts modifier -->
@@ -96,7 +98,8 @@ player plus a finite rail of that category's remaining videos.
 ```
 
 - `data-feature="<projectId>"` — JS injects the featured iframe and wires its audio toggle.
-- `data-category` / `data-exclude` — JS fills the rail with that category minus the featured clip.
+- `data-category` / `data-exclude` — JS fills the Brand and Documentary rails with their remaining clips.
+- `shortProjectOrder` — JS fills the direct Short list in its explicit right-to-left visual order.
 
 **To add a video:** append an object to `projects` with a matching `category`; it appears in that
 section's rail automatically. **To change a featured video:** point `data-feature` at another id in
@@ -127,10 +130,11 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
 - Custom follow-cursor play badge and iframe parallax (±18px / ±14px), fine pointers only, both
   disabled under `prefers-reduced-motion`.
 
-**All three work showcases — `.video-showcase`**
+**Brand & Commercial and Films & Documentary — `.video-showcase`**
 - Two-column grid, `1.42fr / 0.78fr`, capped at `1000px`, gap `clamp(18px, 2.6vw, 34px)`.
 - **Featured player:** autoplays muted, loops forever, no player chrome, `pointer-events: none`.
-  Its only control is the audio toggle pinned bottom-right.
+  Its audio toggle stays pinned bottom-right; a separate transparent layer opens the expanded modal
+  without intercepting the toggle.
 - **Rail:** the category's remaining videos as click-to-play cards, horizontally scrollable,
   with prev/next arrows that disable at each end and a "More →" label above.
 - Aspect ratios come from two custom properties, `--feature-ratio` and `--card-ratio`, so a
@@ -139,26 +143,25 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
 | Showcase | Feature | Ratios | Alignment |
 |---|---|---|---|
 | Brand & Commercial | Vimeo `commercial-03` | 16:9 feature, 16:9 cards | left-oriented, centred in the shell |
-| Shorts & Reels | Vimeo `short-02` | **9:16** feature, **9:16** cards | **right-anchored** (see below) |
 | Films & Documentary | YouTube `documentary-01` | 16:9 feature, 16:9 cards | left-oriented, centred in the shell |
 
-**Shorts & Reels right-alignment** (`.video-showcase--shorts`)
-- The block is narrower (`min(700px, 100%)`) and pushed to the shell's right edge with
-  `margin-left: auto`; the heading matches (`.category-heading--right`).
-- The columns are swapped via `grid-column`, so the featured reel sits on the far right and the
-  rail to its left — a genuinely right-oriented composition rather than the same layout nudged over.
-- **Not mirrored:** the "More →" arrow still points right and the prev/next arrows keep their
-  conventional directions. Mirroring those made the section read as broken rather than intentional.
-- Below 580px the mirror is dropped: columns fall back to document order (feature first) and the
-  heading returns to left-aligned, because a right-anchored composition has no room to read at that
-  width.
+**Shorts & Reels direct row** (`.shorts-video-list`)
+- All four 9:16 Vimeo embeds are direct, muted, autoplaying, looping cards — no featured player,
+  rail, or carousel arrows. Each card has its own Audio ON/OFF control.
+- The list uses `row-reverse`, placing `short-01`, `short-04`, `short-02`, and `short-03` from
+  right to left while retaining that semantic source order.
+- Clips use 225px desktop width (75% of the prior size) and responsive 157.5px/195px widths at
+  the existing breakpoints. The list is right-aligned to the Short heading, wraps when needed, and
+  stacks below 580px instead of scrolling.
+- Clicking any Short, Commercial, or Documentary looping player opens the same expanded modal.
 
 **Modal player — `<dialog class="video-modal">`**
-- Opened by *any* click on `[data-video]` (one delegated listener), keyed by project `id`.
-  Rail cards open it; featured players do not — they are ambient.
+- Opened by rail cards, the hero, or the transparent expand layer on every looping player. Looping
+  videos preserve their 9:16 or 16:9 ratio in the modal and gain a matching audio control.
 - Native `<dialog>.showModal()`, animated via `is-opening` → `is-visible` → `is-closing`.
 - Close = X button, backdrop click, or Esc (through the dialog's **`cancel` event**).
 - Close waits `320ms`, then sets `player.innerHTML = ""`. **That teardown is what stops playback.**
+  A temporarily muted source player restores its audio state only after this teardown.
 
 ### 2.5 Accessibility & motion conventions
 
@@ -197,24 +200,15 @@ These look like bugs or omissions. They are not. Changing them re-opens a solved
    YouTube ignores `loop=1` for a single video unless the video is its own one-item playlist.
    Removing the `playlist` parameter silently stops the Films feature from looping.
 
-5. **Featured players are not click-to-open.**
-   Only rail cards carry `data-video`. The featured player is ambient by design; adding a modal
-   trigger to it would also conflict with the audio toggle sitting on top of it.
+5. **Looping players use a dedicated transparent expand layer.**
+   This makes the visual media clickable while keeping the Audio ON/OFF button above it, avoiding
+   accidental modal opens when the user changes audio.
 
-6. **Shorts & Reels is mirrored, but its arrows are not.**
-   See §2.4. The "More →" and prev/next arrows deliberately keep their normal direction.
-
-7. **`.video-showcase--shorts .showcase-secondary` uses a fixed track, not `minmax(0, …)`.**
-   With only two cards, a `minmax(0, …)` track lets them shrink to fit the rail, which leaves the
-   rail non-scrollable and both arrows permanently disabled — inconsistent with the other two
-   sections. A fixed track forces the overflow that keeps the arrows live. Verified at 1440 / 1200 /
-   1000 / 860 / 700 / 520 / 390px.
-
-8. **Esc is handled via the dialog `cancel` event, not `document.keydown`.**
+6. **Esc is handled via the dialog `cancel` event, not `document.keydown`.**
    Changed in `49553d2`. The global listener bypassed the close animation and left the iframe
    mounted, so audio kept playing. Do not revert to a keydown handler.
 
-9. **Contact form uses EmailJS, not `mailto:`.**
+7. **Contact form uses EmailJS, not `mailto:`.**
    The original `mailto:` handoff (`ce62b7b`) was replaced in `428a3ed` because it depended on a
    configured desktop mail client. `company` and `project_type` were added and then **intentionally
    removed** in `5575af2`; the EmailJS template expects only `from_name`, `from_email`, `budget`,
@@ -250,6 +244,33 @@ Recorded, not yet acted on. None is currently breaking the site.
 ## 5. Change History
 
 Newest first. Dates are the commit/authoring date.
+
+### 2026-10-10 — Expanded playback for looping videos
+
+- **Section affected:** Shorts & Reels, Brand & Commercial, Films & Documentary, and the shared modal.
+- **What changed:** Added an invisible, accessible expand trigger over every looping player; clicking it opens the existing modal at the video's native portrait or landscape ratio.
+- **Videos:** No IDs, order, dimensions, autoplay, or loop parameters changed.
+- **Layout/interaction:** The existing Audio ON/OFF buttons stay above the expand layer. The modal adds a matching audio button for looping players and still closes with X, backdrop click, or Esc.
+- **Implementation notes:** While an unmuted looping player is expanded, its source iframe is temporarily muted to prevent duplicate audio. The source's current audio setting is restored only after the modal iframe is removed. The modal reuses the established URL-based embeds rather than adding a provider SDK.
+- **Fixed / reverted:** No carousel or layout behavior was restored or changed.
+
+### 2026-10-10 — Short scale, alignment, and per-clip audio
+
+- **Section affected:** Shorts & Reels only.
+- **What changed:** Reduced every Short embed to 75% of its previous dimensions and right-aligned the direct video row to the Short heading's right edge.
+- **Videos:** No IDs or right-to-left order changed.
+- **Layout/interaction:** Desktop clips are 225×400px (9:16); responsive clip dimensions are also 75% of their prior values. Each Short now has an independent Audio ON/OFF button in its lower-right corner. The button rebuilds only its own Vimeo URL with the muted flag changed, matching the established featured-player audio behavior.
+- **Implementation notes:** The direct row remains carousel-free and preserves the existing autoplay, loop, inline-playback, and `autopause=0` parameters.
+- **Fixed / reverted:** Restored audio controls for direct Short embeds without restoring a featured-player or carousel structure.
+
+### 2026-10-10 — Shorts direct video row
+
+- **Section affected:** Shorts & Reels only.
+- **What changed:** Replaced the Shorts featured-player-plus-carousel pattern with one direct Vimeo video list. The commercial and documentary showcase carousels are unchanged.
+- **Videos:** Four Vimeo clips are explicitly ordered as `1165586227`, `1234598390`, `1165590282`, then `1167277734` from right to left.
+- **Layout/interaction:** Desktop uses a direct right-to-left flex row; each clip preserves the existing 300px-wide 9:16 presentation. At narrower breakpoints, clips retain the existing responsive dimensions and wrap (then stack on mobile) rather than becoming a scroll rail. Shorts has no carousel controls or scrolling container.
+- **Implementation notes:** The Short list is populated from a small ordered ID list against the central project registry, so provider parsing and the existing muted/autoplay/loop Vimeo URL parameters remain shared.
+- **Fixed / reverted:** Removed the Short carousel arrows and `More` affordance because all Short clips play as ambient embeds in the same display area.
 
 ### 2026-09-09 — Featured-video system extended to all three work categories
 

@@ -643,6 +643,26 @@ h1 span {
   margin-left: auto;
 }
 
+/* Shorts & Reels is intentionally independent of the showcase carousel.
+   Source order stays semantic while row-reverse places the first Short on the
+   far right, as specified by the visual reading direction. */
+.shorts-video-list {
+  --shorts-media-width: 225px;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  gap: 16px;
+  flex-flow: row-reverse wrap;
+  justify-content: flex-start;
+}
+
+.shorts-video-list .short-video-card {
+  width: var(--shorts-media-width);
+  flex: 0 0 var(--shorts-media-width);
+  aspect-ratio: 9 / 16;
+}
+
 .video-showcase {
   --feature-ratio: 16 / 9;
   --card-ratio: 16 / 9;
@@ -660,7 +680,8 @@ h1 span {
 .video-showcase--shorts {
   --feature-ratio: 9 / 16;
   --card-ratio: 9 / 16;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  --shorts-media-width: 300px;
+  grid-template-columns: minmax(0, 1fr) var(--shorts-media-width);
   width: min(700px, 100%);
   margin-right: 0;
   margin-left: auto;
@@ -706,6 +727,20 @@ h1 span {
   right: 12px;
   bottom: 12px;
   z-index: 2;
+}
+
+.video-expand-trigger {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.video-expand-trigger:focus-visible {
+  outline-color: rgba(255, 255, 255, 0.92);
+  outline-offset: -4px;
 }
 
 .feature-audio-toggle {
@@ -793,7 +828,26 @@ h1 span {
 /* A fixed track (not minmax) keeps the two reels from shrinking to fit, so this
    rail overflows and its arrows stay live like the other two showcases. */
 .video-showcase--shorts .showcase-secondary {
-  grid-auto-columns: 160px;
+  grid-auto-columns: var(--shorts-media-width);
+}
+
+/* Every Short uses the featured reel's 9:16 dimensions. This makes the
+   secondary Vimeo embeds exactly as tall as the right-hand reference video. */
+.video-showcase--shorts .showcase-more {
+  display: none;
+}
+
+.video-showcase--shorts .short-video-card {
+  aspect-ratio: var(--card-ratio);
+  cursor: default;
+}
+
+.short-video-card iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
 }
 
 .showcase-secondary .project-card {
@@ -1385,6 +1439,10 @@ h1 span {
   background: transparent;
 }
 
+.video-modal.is-portrait {
+  width: min(460px, calc(100% - 30px));
+}
+
 .video-modal::backdrop {
   background-color: rgba(9, 8, 6, 0);
   -webkit-backdrop-filter: blur(0);
@@ -1444,6 +1502,21 @@ h1 span {
   width: 100%;
   height: 100%;
   border: 0;
+}
+
+.video-modal.is-portrait .video-frame {
+  aspect-ratio: 9 / 16;
+}
+
+.modal-audio-toggle {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+}
+
+.modal-audio-toggle[hidden] {
+  display: none;
 }
 
 .reveal {
@@ -1522,8 +1595,15 @@ h1 span {
   }
 
   .video-showcase--shorts {
-    grid-template-columns: minmax(0, 1fr) 210px;
+    --shorts-media-width: 210px;
+    grid-template-columns: minmax(0, 1fr) var(--shorts-media-width);
     width: min(560px, 100%);
+  }
+
+  .shorts-video-list {
+    --shorts-media-width: 157.5px;
+    width: fit-content;
+    gap: 12px;
   }
 
   .showcase-secondary {
@@ -1532,7 +1612,7 @@ h1 span {
   }
 
   .video-showcase--shorts .showcase-secondary {
-    grid-auto-columns: min(30vw, 150px);
+    grid-auto-columns: var(--shorts-media-width);
   }
 
   .project-card {
@@ -1618,6 +1698,18 @@ h1 span {
     margin-left: auto;
   }
 
+  .video-showcase--shorts {
+    --shorts-media-width: min(100%, 260px);
+  }
+
+  .shorts-video-list {
+    --shorts-media-width: min(100%, 195px);
+    width: fit-content;
+    margin-left: auto;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
   /* Stacked: the mirrored Shorts columns fall back to document order so the
      featured reel still leads, and the tall 9:16 feature stays centred. */
   .video-showcase--shorts .showcase-feature,
@@ -1627,7 +1719,7 @@ h1 span {
   }
 
   .video-showcase--shorts .showcase-feature {
-    width: min(100%, 260px);
+    width: var(--shorts-media-width);
     margin-right: auto;
     margin-left: auto;
   }
@@ -1653,7 +1745,12 @@ h1 span {
   }
 
   .video-showcase--shorts .showcase-secondary {
-    grid-auto-columns: min(52vw, 220px);
+    grid-auto-columns: var(--shorts-media-width);
+  }
+
+  .video-showcase--shorts .showcase-secondary-shell {
+    padding-right: 0;
+    padding-left: 0;
   }
 
   .contact-actions {

@@ -60,6 +60,14 @@ const projects = [
     tone: "warm",
   },
   {
+    id: "short-04",
+    title: "Reel 04",
+    category: "Shorts & Reels",
+    meta: "Vertical Edit",
+    video: "https://vimeo.com/1234598390",
+    tone: "street",
+  },
+  {
     id: "documentary-01",
     title: "Film 01",
     category: "Documentary",
@@ -101,6 +109,7 @@ const youtubeIframeAttributes = {
 const modal = document.querySelector(".video-modal");
 const player = document.querySelector("[data-player]");
 const closeButton = document.querySelector(".modal-close");
+const modalAudioToggle = document.querySelector("[data-modal-audio]");
 const hero = document.querySelector(".hero");
 const heroMedia = document.querySelector(".hero-media");
 const heroPlayCursor = document.querySelector(".hero-play-cursor");
@@ -318,25 +327,77 @@ function initializeFeature(featureElement) {
   frame.src = getFeatureEmbedUrl(project.video, true);
   featureElement.prepend(frame);
 
+  const expandTrigger = document.createElement("button");
+  expandTrigger.className = "video-expand-trigger";
+  expandTrigger.type = "button";
+  expandTrigger.setAttribute("aria-label", `Expand ${project.title}`);
+  expandTrigger.addEventListener("click", () => openLoopingVideo(project, featureElement));
+  featureElement.append(expandTrigger);
+  featureElement.dataset.muted = "true";
+
   const toggle = featureElement.querySelector(".feature-audio-toggle");
   if (!toggle) return;
-  let isMuted = true;
-
   toggle.addEventListener("click", () => {
-    isMuted = !isMuted;
-    const nextSource = getFeatureEmbedUrl(project.video, isMuted);
-    if (frame.src !== nextSource) frame.src = nextSource;
-    toggle.setAttribute("aria-pressed", String(!isMuted));
-    toggle.setAttribute(
-      "aria-label",
-      isMuted ? "Turn featured video audio on" : "Turn featured video audio off"
-    );
-    toggle.querySelector("span").textContent = isMuted ? "Audio Off" : "Audio On";
-    toggle.classList.toggle("is-audio-on", !isMuted);
+    const isMuted = featureElement.dataset.muted !== "false";
+    updateAmbientVideoSource(featureElement, project, !isMuted);
   });
 }
 
 document.querySelectorAll(".showcase-feature").forEach(initializeFeature);
+
+function shortVideoCard(project) {
+  const card = document.createElement("div");
+  card.className = `project-card short-video-card tone-${project.tone}`;
+
+  const frame = document.createElement("iframe");
+  frame.title = project.title;
+  frame.allow = "autoplay; encrypted-media; fullscreen; picture-in-picture";
+  frame.setAttribute("allowfullscreen", "");
+  frame.setAttribute("tabindex", "-1");
+  // The Vimeo background embed is muted, inline, autoplaying, and looping.
+  // autopause=0 is required so every Short can play at the same time.
+  frame.src = getFeatureEmbedUrl(project.video, true);
+
+  const controls = document.createElement("div");
+  controls.className = "showcase-feature-controls";
+  const toggle = document.createElement("button");
+  toggle.className = "feature-audio-toggle";
+  toggle.type = "button";
+  toggle.setAttribute("aria-pressed", "false");
+  toggle.setAttribute("aria-label", `Turn ${project.title} audio on`);
+  toggle.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
+      <path d="m17 9 4 6M21 9l-4 6"></path>
+    </svg>
+    <span>Audio Off</span>
+  `;
+
+  toggle.addEventListener("click", () => {
+    const isMuted = card.dataset.muted !== "false";
+    updateAmbientVideoSource(card, project, !isMuted);
+  });
+
+  const expandTrigger = document.createElement("button");
+  expandTrigger.className = "video-expand-trigger";
+  expandTrigger.type = "button";
+  expandTrigger.setAttribute("aria-label", `Expand ${project.title}`);
+  expandTrigger.addEventListener("click", () => openLoopingVideo(project, card));
+  card.dataset.muted = "true";
+  controls.append(toggle);
+  card.append(frame, expandTrigger, controls);
+
+  return card;
+}
+
+const shortProjectOrder = ["short-01", "short-04", "short-02", "short-03"];
+
+document.querySelectorAll(".shorts-video-list").forEach((list) => {
+  shortProjectOrder
+    .map((projectId) => projects.find((project) => project.id === projectId))
+    .filter(Boolean)
+    .forEach((project) => list.append(shortVideoCard(project)));
+});
 
 // The rails are deliberately finite click-to-play strips rather than looping
 // carousels: each holds only the two videos left over after the featured one,
@@ -378,12 +439,52 @@ document.querySelectorAll(".showcase-secondary-shell").forEach((shell) => {
   requestAnimationFrame(updateArrowState);
 });
 
-function openVideo(projectId) {
+let activeLoopingVideo = null;
+
+function updateAudioToggle(toggle, project, isMuted) {
+  toggle.setAttribute("aria-pressed", String(!isMuted));
+  toggle.setAttribute(
+    "aria-label",
+    `Turn ${project.title} audio ${isMuted ? "on" : "off"}`
+  );
+  toggle.querySelector("span").textContent = isMuted ? "Audio Off" : "Audio On";
+  toggle.classList.toggle("is-audio-on", !isMuted);
+}
+
+function updateAmbientVideoSource(sourceElement, project, isMuted) {
+  const frame = sourceElement.querySelector("iframe");
+  const nextSource = getFeatureEmbedUrl(project.video, isMuted);
+  if (frame.src !== nextSource) frame.src = nextSource;
+  sourceElement.dataset.muted = String(isMuted);
+  updateAudioToggle(sourceElement.querySelector(".feature-audio-toggle"), project, isMuted);
+}
+
+function updateModalAudio(project, isMuted) {
+  const frame = player.querySelector("iframe");
+  const nextSource = getFeatureEmbedUrl(project.video, isMuted);
+  if (frame && frame.src !== nextSource) frame.src = nextSource;
+  updateAudioToggle(modalAudioToggle, project, isMuted);
+}
+
+function openLoopingVideo(project, sourceElement) {
+  const isMuted = sourceElement.dataset.muted !== "false";
+  activeLoopingVideo = { project, sourceElement, isMuted };
+
+  // Keep one audible instance only. The original is restored after the modal
+  // iframe is removed, so closing never leaves overlapping audio behind.
+  if (!isMuted) updateAmbientVideoSource(sourceElement, project, true);
+  openVideo(project.id, { looping: true, isMuted });
+}
+
+function openVideo(projectId, options = {}) {
+  const { looping = false, isMuted = true } = options;
   const project =
     projects.find((item) => item.id === projectId) ??
     (projectId === youtubeDebugProject.id ? youtubeDebugProject : projects[0]);
   const isYouTube = getVideoProvider(project.video) === "youtube";
-  const embedUrl = getVideoEmbedUrl(project.video);
+  const embedUrl = looping
+    ? getFeatureEmbedUrl(project.video, isMuted)
+    : getVideoEmbedUrl(project.video);
   if (isYouTube) {
     logEnvironmentDebug();
     logYouTubeDebug(project.title, project.video);
@@ -400,6 +501,9 @@ function openVideo(projectId) {
       allowfullscreen
     ></iframe>
   `;
+  modal.classList.toggle("is-portrait", project.category === "Shorts & Reels");
+  modalAudioToggle.hidden = !looping;
+  if (looping) updateAudioToggle(modalAudioToggle, project, isMuted);
   modal.classList.remove("is-visible", "is-closing");
   modal.classList.add("is-opening");
   modal.showModal();
@@ -419,6 +523,12 @@ function openVideo(projectId) {
     });
   });
 }
+
+modalAudioToggle.addEventListener("click", () => {
+  if (!activeLoopingVideo) return;
+  activeLoopingVideo.isMuted = !activeLoopingVideo.isMuted;
+  updateModalAudio(activeLoopingVideo.project, activeLoopingVideo.isMuted);
+});
 
 window.testYouTubeEmbed = () => openVideo(youtubeDebugProject.id);
 
@@ -521,6 +631,13 @@ function closeVideo() {
     modal.classList.remove("is-visible", "is-opening", "is-closing");
     modal.close();
     player.innerHTML = "";
+    modalAudioToggle.hidden = true;
+    modal.classList.remove("is-portrait");
+    if (activeLoopingVideo) {
+      const { project, sourceElement, isMuted } = activeLoopingVideo;
+      updateAmbientVideoSource(sourceElement, project, isMuted);
+      activeLoopingVideo = null;
+    }
     document.body.classList.remove("modal-open");
   }
 
