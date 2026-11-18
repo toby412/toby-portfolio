@@ -1648,7 +1648,76 @@ h1 span {
   }
 
   .hero {
-    min-height: 100svh;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    padding-top: 0;
+  }
+
+  .hero-media,
+  .hero-media iframe {
+    inset: 0;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
+    transform: none;
+  }
+
+  .hero-copy {
+    top: clamp(52px, 15vw, 64px);
+  }
+
+  .hero-copy h1 {
+    margin-bottom: 8px;
+    font-size: clamp(48px, 16vw, 62px);
+  }
+
+  .hero-role {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .hero-bottom {
+    bottom: 10px;
+    gap: 4px;
+    font-size: 8px;
+  }
+
+  .hero-bottom i {
+    height: 16px;
+  }
+
+  /* Keep the mobile page rhythm compact without changing the desktop scale. */
+  .about {
+    gap: 40px;
+    padding: 72px 0 68px;
+    text-align: center;
+  }
+
+  .about-copy,
+  .workflow {
+    justify-self: center;
+  }
+
+  .about-copy > p:not(.eyebrow) {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .stats {
+    margin-top: 28px;
+    padding-top: 20px;
+    text-align: center;
+  }
+
+  .stats div {
+    align-items: center;
+  }
+
+  .workflow > .eyebrow,
+  .workflow h2 {
+    text-align: center;
   }
 
   .about h2,
@@ -1692,7 +1761,7 @@ h1 span {
   .video-showcase,
   .video-showcase--shorts {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 14px;
     width: 100%;
     margin-right: auto;
     margin-left: auto;
@@ -1703,11 +1772,32 @@ h1 span {
   }
 
   .shorts-video-list {
-    --shorts-media-width: min(100%, 195px);
-    width: fit-content;
-    margin-left: auto;
-    flex-direction: column;
-    align-items: flex-end;
+    /* Break out of the section shell only on phones. The rail itself owns
+       horizontal overflow, leaving the rest of the document viewport-safe. */
+    --shorts-media-width: clamp(140px, 42vw, 170px);
+    width: 100vw;
+    max-width: none;
+    margin-right: 0;
+    margin-left: calc(50% - 50vw);
+    padding: 0 20px 8px;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: clip;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 20px;
+    scroll-snap-type: inline proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .shorts-video-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shorts-video-list .short-video-card {
+    scroll-snap-align: start;
   }
 
   /* Stacked: the mirrored Shorts columns fall back to document order so the
@@ -1739,9 +1829,10 @@ h1 span {
   }
 
   .showcase-secondary {
-    grid-auto-columns: min(78vw, 310px);
+    grid-auto-columns: min(68vw, 250px);
+    gap: 10px;
     margin-top: -4px;
-    margin-bottom: -18px;
+    margin-bottom: -12px;
   }
 
   .video-showcase--shorts .showcase-secondary {
@@ -1768,12 +1859,55 @@ h1 span {
     padding: 22px;
   }
 
+  .contact-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .contact-links a {
+    min-height: 70px;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .contact-links .social-card-main {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .contact-links .social-icon {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    border-radius: 10px;
+  }
+
+  .contact-links strong {
+    font-size: 13px;
+  }
+
+  .contact-links .external-icon {
+    display: none;
+  }
+
   .work {
-    padding: 96px 0 100px;
+    padding: 68px 0 72px;
+  }
+
+  .work-category + .work-category {
+    margin-top: 78px;
+  }
+
+  .category-heading {
+    margin-bottom: 28px;
   }
 
   .contact {
-    gap: 42px;
-    padding: 84px 0 60px;
+    gap: 34px;
+    padding: 64px 0 48px;
+  }
+
+  .footer-inner {
+    padding: 28px 0 40px;
   }
 }
