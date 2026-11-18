@@ -1630,6 +1630,24 @@ h1 span {
 }
 
 @media (max-width: 580px) {
+  /* Mobile type scale (phones only; desktop values above are untouched).
+     Display  h1        30–40px
+     H2       section   30–38px
+     H3       category  28–34px
+     Stat     number    24–28px
+     Body     copy      15px / 1.6
+     Small    desc      14px
+     Label    eyebrow   10px, tighter tracking */
+  :root {
+    --eyebrow-size: 10px;
+    --eyebrow-spacing: 0.28em;
+  }
+
+  .eyebrow,
+  .workflow > .eyebrow {
+    margin-bottom: 12px;
+  }
+
   .site-header nav {
     gap: 12px;
     padding: 9px 12px;
@@ -1643,9 +1661,6 @@ h1 span {
     width: min(100% - 40px, 1080px);
   }
 
-  h1 {
-    font-size: clamp(60px, 22vw, 96px);
-  }
 
   .hero {
     min-height: 0;
@@ -1664,70 +1679,67 @@ h1 span {
     transform: none;
   }
 
+  /* The 16:9 hero is only ~210px tall on a phone, so the title sits in the
+     bottom fade band (hero::after) instead of over the middle of the video. */
   .hero-copy {
-    top: clamp(52px, 15vw, 64px);
+    top: auto;
+    bottom: clamp(10px, 3.6vw, 18px);
   }
 
   .hero-copy h1 {
-    margin-bottom: 8px;
-    font-size: clamp(48px, 16vw, 62px);
+    margin-bottom: 6px;
+    font-size: clamp(30px, 9vw, 40px);
+    line-height: 0.9;
   }
 
   .hero-role {
-    font-size: 12px;
+    font-size: clamp(11px, 3.1vw, 13px);
     line-height: 1.35;
   }
 
+  /* No room for the scroll cue once the title occupies the fade band. */
   .hero-bottom {
-    bottom: 10px;
-    gap: 4px;
-    font-size: 8px;
-  }
-
-  .hero-bottom i {
-    height: 16px;
+    display: none;
   }
 
   /* Keep the mobile page rhythm compact without changing the desktop scale. */
+  /* About: the column is centred in the viewport, its content reads left. */
   .about {
-    gap: 40px;
+    gap: 48px;
     padding: 72px 0 68px;
-    text-align: center;
+    text-align: left;
   }
 
   .about-copy,
   .workflow {
+    width: 100%;
+    max-width: 480px;
     justify-self: center;
-  }
-
-  .about-copy > p:not(.eyebrow) {
-    margin-right: auto;
-    margin-left: auto;
   }
 
   .stats {
     margin-top: 28px;
     padding-top: 20px;
-    text-align: center;
   }
 
   .stats div {
-    align-items: center;
-  }
-
-  .workflow > .eyebrow,
-  .workflow h2 {
-    text-align: center;
+    align-items: flex-start;
+    gap: 6px;
   }
 
   .about h2,
-  .workflow h2,
   .contact h2 {
-    font-size: clamp(36px, 12vw, 58px);
+    font-size: clamp(30px, 8.6vw, 38px);
+    line-height: 1.08;
+  }
+
+  .about h2 {
+    margin-bottom: 20px;
   }
 
   .workflow h2 {
-    font-size: 28px;
+    margin-bottom: 14px;
+    font-size: clamp(24px, 7vw, 28px);
   }
 
   .about h2 > span,
@@ -1737,7 +1749,8 @@ h1 span {
 
   .about-copy > p:not(.eyebrow),
   .contact-copy > p:not(.eyebrow) {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.6;
   }
 
   .stats {
@@ -1747,15 +1760,40 @@ h1 span {
 
   .stats dt {
     font-size: 10px;
+    letter-spacing: 0.1em;
   }
 
   .stats dd {
-    font-size: 26px;
+    font-size: clamp(24px, 7vw, 28px);
   }
 
   .workflow li {
-    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-columns: 36px minmax(0, 1fr);
     padding: 12px 15px;
+  }
+
+  .workflow li span {
+    font-size: 20px;
+  }
+
+  .workflow h3 {
+    font-size: 15px;
+  }
+
+  .workflow p {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .category-heading h3 {
+    margin-bottom: 12px;
+    font-size: clamp(28px, 8.2vw, 34px);
+    line-height: 1.05;
+  }
+
+  .category-description {
+    font-size: 14px;
+    line-height: 1.55;
   }
 
   .video-showcase,
@@ -1859,6 +1897,14 @@ h1 span {
     padding: 22px;
   }
 
+  .contact-form h3 {
+    font-size: 18px;
+  }
+
+  .contact-success-title {
+    font-size: 21px;
+  }
+
   .contact-links {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
@@ -1909,5 +1955,9 @@ h1 span {
 
   .footer-inner {
     padding: 28px 0 40px;
+  }
+
+  .site-footer {
+    font-size: 11px;
   }
 }
