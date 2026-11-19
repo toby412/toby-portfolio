@@ -93,14 +93,9 @@
         tabindex="0"
         data-video="showreel"
       >
-        <div class="hero-media" aria-hidden="true">
-          <iframe
-            title="Toby Yu showreel background"
-            src="https://player.vimeo.com/video/1165378554?background=1&amp;autoplay=1&amp;loop=1&amp;muted=1&amp;quality=1080p"
-            allow="autoplay; fullscreen; picture-in-picture"
-            tabindex="-1"
-          ></iframe>
-        </div>
+        <!-- The showreel iframe and its thumbnail poster are created by src/main.js from the
+             "showreel" entry in src/projects.json (same system as the featured players). -->
+        <div class="hero-media" aria-hidden="true"></div>
 
         <div class="hero-copy reveal">
           <h1 id="hero-title">Toby <span>Yu</span></h1>
@@ -114,6 +109,13 @@
             </svg>
           </div>
         </div>
+
+        <!-- Availability note. Delete this <a> to remove it; it is the only link in the hero,
+             hence data-no-video (clicking it must not open the showreel). -->
+        <a class="hero-status" href="#contact" data-no-video>
+          <span class="hero-status-dot" aria-hidden="true"></span>
+          <span>Available for projects</span>
+        </a>
 
         <div class="hero-bottom" aria-hidden="true">
           <span>Scroll</span>

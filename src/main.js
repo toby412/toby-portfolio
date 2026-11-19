@@ -321,6 +321,11 @@ function initializeFeature(featureElement) {
 
 document.querySelectorAll(".showcase-feature").forEach(initializeFeature);
 
+// The hero is an ambient player too: thumbnail poster while it loads, and the
+// same live-iframe hand-off into the modal when it is clicked (openShowreel).
+const showreelProject = projects.find((project) => project.id === "showreel");
+if (showreelProject) registerAmbientPlayer(heroMedia, showreelProject);
+
 function shortVideoCard(project) {
   const card = document.createElement("div");
   card.className = `project-card short-video-card tone-${project.tone}`;
@@ -456,7 +461,8 @@ function updateAudioToggle(toggle, project, isMuted) {
 function updateAmbientVideoSource(sourceElement, project, isMuted) {
   const wasMuted = sourceElement.dataset.muted !== "false";
   sourceElement.dataset.muted = String(isMuted);
-  updateAudioToggle(sourceElement.querySelector(".feature-audio-toggle"), project, isMuted);
+  const toggle = sourceElement.querySelector(".feature-audio-toggle"); // the hero has none
+  if (toggle) updateAudioToggle(toggle, project, isMuted);
   if (wasMuted === isMuted || !sourceElement.querySelector("iframe")) return;
 
   window.clearTimeout(posterTimers.get(sourceElement));
@@ -680,10 +686,19 @@ hero.addEventListener("pointerleave", () => {
   queueHeroParallaxFrame();
 });
 
+// Clicking the hero expands the showreel the same way as any looping player:
+// instantly (the live background iframe moves into the modal) and with sound.
+function openShowreel() {
+  if (showreelProject) openLoopingVideo(showreelProject, heroMedia);
+  else openVideo("showreel");
+}
+
 hero.addEventListener("keydown", (event) => {
+  // Keys pressed on the availability link inside the hero belong to the link.
+  if (event.target !== hero) return;
   if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
-  openVideo("showreel");
+  openShowreel();
 });
 
 function closeVideo(onClosed) {
@@ -727,9 +742,11 @@ function closeVideo(onClosed) {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-no-video]")) return;
   const trigger = event.target.closest("[data-video]");
   if (!trigger) return;
-  openVideo(trigger.dataset.video);
+  if (trigger === hero) openShowreel();
+  else openVideo(trigger.dataset.video);
 });
 
 // No × button by design: the modal closes on a backdrop click or Esc only.

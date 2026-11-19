@@ -58,7 +58,8 @@ This is the heart of the site. Four surfaces play video, and they behave differe
 ### 2.1 Video registry
 
 All clips are declared in one file — [src/projects.json](src/projects.json), imported by `src/main.js`.
-Nothing else hardcodes a video URL **except** the hero background embed noted below.
+Nothing hardcodes a video URL — the hero is now built from the `showreel` entry too (the
+`index.html` hero embed, and the "remaining hardcoded embed" note below, are obsolete as of 2026-11-19).
 The owner edits titles and project details through [editor.html](editor.html); structural changes
 (adding/removing/reordering videos, changing categories) are still done by hand in the JSON.
 
@@ -301,6 +302,36 @@ Recorded, not yet acted on. None is currently breaking the site.
 ## 5. Change History
 
 Newest first. Dates are the commit/authoring date.
+
+### 2026-11-19 — Hero: availability note, thumbnail poster, instant expand with sound
+
+- **Section affected:** Hero; modal.
+- **What changed:**
+  - The hero showreel iframe is no longer hardcoded in `index.html`; `.hero-media` starts empty and
+    `registerAmbientPlayer(heroMedia, showreelProject)` builds it from the `showreel` entry in
+    `src/projects.json`. It now shares the ambient-player system: a thumbnail poster shows until the
+    video is playing, and the iframe is unloaded when the hero scrolls out of view.
+  - Clicking the hero (or Enter/Space on it) calls `openShowreel()` → `openLoopingVideo()`: in
+    Chrome/Edge the live iframe moves into the modal instantly and unmutes (see §2.4); elsewhere a
+    fresh looping player with sound is built.
+  - New `.hero-status` pill, "Available for projects" (green pulsing dot), bottom-left, linking to
+    `#contact`. It has `data-no-video` so the document click handler ignores it, and the hero's
+    keydown handler ignores keys whose target is not the hero itself. Delete the `<a>` to remove it.
+- **Videos:** none; the showreel id is unchanged. The hero embed gained the shared extra params
+  (`autopause=0`, `playsinline`, `title/byline/portrait=0`).
+- **Layout/interaction:** Pill sits on the hero's bottom gradient; over it the play-cursor badge
+  hides (`.hero:has(.hero-status:hover)`). Phone pill is smaller and at `left: 12px`.
+- **Implementation notes:** **Behaviour change:** the expanded showreel is now a *background-mode*
+  player like the other looping videos — loops, no seek/pause controls, audio toggle in the modal —
+  whereas before it opened the full Vimeo player with controls. To restore controls, make
+  `openShowreel()` call `openVideo("showreel")` again. The hero is not role-clean: it is
+  `role="button"` and now contains a link (known nested-interactive a11y trade-off).
+  `updateAmbientVideoSource()` is null-safe for containers without an audio toggle.
+  Verified on the production build at 1440×900 and 390×844, plus a no-`moveBefore` run: poster
+  then playing state, same iframe moves to the modal and back, hero poster shown while expanded,
+  Enter on hero opens / Enter on pill scrolls to contact without opening, unload on scroll-away and
+  reload on return, no errors. Audibility could not be tested headlessly (§4).
+- **Fixed / reverted:** none.
 
 ### 2026-11-19 — Link preview card (Open Graph / Twitter) + canonical
 
