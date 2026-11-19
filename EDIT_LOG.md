@@ -67,7 +67,8 @@ Nothing else hardcodes a video URL **except** the two background embeds noted be
 | `short-01` | Reel 01 | Shorts & Reels | Vimeo | `1165586227` | Shorts direct row — rightmost |
 | `short-04` | Reel 04 | Shorts & Reels | Vimeo | `1234598390` | Shorts direct row — second from right |
 | `short-02` | Reel 02 | Shorts & Reels | Vimeo | `1165590282` | Shorts direct row — third from right |
-| `short-03` | Reel 03 | Shorts & Reels | Vimeo | `1167277734` | Shorts direct row — leftmost |
+| `short-03` | Reel 03 | Shorts & Reels | Vimeo | `1167277734` | Shorts direct row — fourth from right |
+| `short-05` | Reel 05 | Shorts & Reels | YouTube | `DPhvVgVLi04` | Shorts direct row — leftmost |
 | `documentary-01` | Film 01 | Documentary | YouTube | `NnY4RRX-n_0` | **Featured** — Films & Documentary |
 | `documentary-02` | Film 02 | Documentary | Vimeo | `1194363662` | Films & Documentary rail |
 | `documentary-03` | Film 03 | Documentary | YouTube | `ivhIMTe7Mu8` | Films & Documentary rail |
@@ -85,7 +86,7 @@ currently not rendered. Keep them populated for consistency; neither is load-bea
 
 Brand & Commercial and Films & Documentary render the shared `.video-showcase`: one ambient
 featured player plus a finite rail of that category's remaining videos. Shorts & Reels uses its
-own `.shorts-video-list` so all four ambient embeds can be visible without carousel controls.
+own `.shorts-video-list` so all five ambient embeds can be visible without carousel controls.
 
 ```html
 <div class="video-showcase">                      <!-- + --shorts modifier -->
@@ -146,9 +147,9 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
 | Films & Documentary | YouTube `documentary-01` | 16:9 feature, 16:9 cards | left-oriented, centred in the shell |
 
 **Shorts & Reels direct row** (`.shorts-video-list`)
-- All four 9:16 Vimeo embeds are direct, muted, autoplaying, looping cards — no featured player,
+- All five 9:16 embeds (four Vimeo, one YouTube Short) are direct, muted, autoplaying, looping cards — no featured player,
   rail, or carousel arrows. Each card has its own Audio ON/OFF control.
-- The list uses `row-reverse`, placing `short-01`, `short-04`, `short-02`, and `short-03` from
+- The list uses `row-reverse`, placing `short-01`, `short-04`, `short-02`, `short-03`, and `short-05` from
   right to left while retaining that semantic source order.
 - Clips use 225px desktop width (75% of the prior size) and responsive 157.5px/195px widths at
   the existing breakpoints. The list is right-aligned to the Short heading, wraps when needed, and
@@ -244,6 +245,15 @@ Recorded, not yet acted on. None is currently breaking the site.
 ## 5. Change History
 
 Newest first. Dates are the commit/authoring date.
+
+### 2026-11-19 — Fifth Short (YouTube)
+
+- **Section affected:** Shorts & Reels only.
+- **What changed:** Added `short-05` (Reel 05) as the fifth Short, appended to `shortProjectOrder` so it sits leftmost in the right-to-left row.
+- **Videos:** Added YouTube Short `DPhvVgVLi04` (`https://www.youtube.com/shorts/DPhvVgVLi04`).
+- **Layout/interaction:** Same 9:16 ambient card, muted autoplay loop, per-clip Audio ON/OFF and expand-to-modal as the other Shorts. The row wraps at narrower widths as before.
+- **Implementation notes:** `getYouTubeVideoId` now also parses `/shorts/<id>` URLs. `shortVideoCard` now applies the YouTube `allow` list and `referrerPolicy` when the clip is YouTube (previously Vimeo-only).
+- **Fixed / reverted:** None.
 
 ### 2026-10-10 — Expanded playback for looping videos
 

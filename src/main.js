@@ -68,6 +68,14 @@ const projects = [
     tone: "street",
   },
   {
+    id: "short-05",
+    title: "Reel 05",
+    category: "Shorts & Reels",
+    meta: "Vertical Edit",
+    video: "https://www.youtube.com/shorts/DPhvVgVLi04",
+    tone: "type",
+  },
+  {
     id: "documentary-01",
     title: "Film 01",
     category: "Documentary",
@@ -130,7 +138,7 @@ function getYouTubeVideoId(videoUrl) {
   try {
     const url = new URL(videoUrl);
     if (url.hostname === "youtu.be") return url.pathname.slice(1).split("/")[0];
-    return url.searchParams.get("v") ?? url.pathname.match(/\/embed\/([^/?]+)/)?.[1];
+    return url.searchParams.get("v") ?? url.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/)?.[1];
   } catch {
     return null;
   }
@@ -351,7 +359,11 @@ function shortVideoCard(project) {
 
   const frame = document.createElement("iframe");
   frame.title = project.title;
-  frame.allow = "autoplay; encrypted-media; fullscreen; picture-in-picture";
+  const isYouTube = getVideoProvider(project.video) === "youtube";
+  frame.allow = isYouTube
+    ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    : "autoplay; encrypted-media; fullscreen; picture-in-picture";
+  if (isYouTube) frame.referrerPolicy = "strict-origin-when-cross-origin";
   frame.setAttribute("allowfullscreen", "");
   frame.setAttribute("tabindex", "-1");
   // The Vimeo background embed is muted, inline, autoplaying, and looping.
@@ -390,7 +402,7 @@ function shortVideoCard(project) {
   return card;
 }
 
-const shortProjectOrder = ["short-01", "short-04", "short-02", "short-03"];
+const shortProjectOrder = ["short-01", "short-04", "short-02", "short-03", "short-05"];
 
 document.querySelectorAll(".shorts-video-list").forEach((list) => {
   shortProjectOrder
