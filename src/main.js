@@ -1,123 +1,19 @@
 import { initializeAnalytics } from "./analytics.js";
+// Video registry. Edit it with editor.html (open it in Chrome/Edge) or by hand.
+// Fields: id, title, category, meta, video, tone, client, role, year, tools, concept.
+import projects from "./projects.json";
 
 initializeAnalytics();
 
-const projects = [
-  {
-    id: "showreel",
-    title: "Toby Yu Showreel",
-    category: "Showreel",
-    meta: "Portfolio",
-    video: "https://player.vimeo.com/video/1165378554",
-    tone: "amber",
-  },
-  {
-    id: "commercial-03",
-    title: "Commercial Reel 3",
-    category: "Commercial",
-    meta: "Commercial",
-    video: "https://player.vimeo.com/video/1195101228",
-    tone: "field",
-  },
-  {
-    id: "commercial-02",
-    title: "Commercial Reel 2",
-    category: "Commercial",
-    meta: "Campaign Edit",
-    video: "https://player.vimeo.com/video/1191103532",
-    tone: "mono",
-  },
-  {
-    id: "commercial-01",
-    title: "Commercial Reel",
-    category: "Commercial",
-    meta: "Brand Film",
-    video: "https://player.vimeo.com/video/1180459302",
-    tone: "amber",
-  },
-  {
-    id: "short-01",
-    title: "Reel 01",
-    category: "Shorts & Reels",
-    meta: "Vertical Edit",
-    video: "https://player.vimeo.com/video/1165586227",
-    tone: "street",
-  },
-  {
-    id: "short-02",
-    title: "Reel 02",
-    category: "Shorts & Reels",
-    meta: "Social Content",
-    video: "https://player.vimeo.com/video/1165590282",
-    tone: "type",
-  },
-  {
-    id: "short-03",
-    title: "Reel 03",
-    category: "Shorts & Reels",
-    meta: "Motion Design",
-    video: "https://player.vimeo.com/video/1167277734",
-    tone: "warm",
-  },
-  {
-    id: "short-04",
-    title: "Reel 04",
-    category: "Shorts & Reels",
-    meta: "Vertical Edit",
-    video: "https://vimeo.com/1234598390",
-    tone: "street",
-  },
-  {
-    id: "short-05",
-    title: "Reel 05",
-    category: "Shorts & Reels",
-    meta: "Vertical Edit",
-    video: "https://www.youtube.com/shorts/DPhvVgVLi04",
-    tone: "type",
-  },
-  {
-    id: "documentary-01",
-    title: "Film 01",
-    category: "Documentary",
-    meta: "Long Form",
-    video: "https://www.youtube.com/watch?v=NnY4RRX-n_0",
-    tone: "cinema",
-  },
-  {
-    id: "documentary-02",
-    title: "Film 02",
-    category: "Documentary",
-    meta: "Story Edit",
-    video: "https://vimeo.com/1194363662?fl=ip&fe=ec",
-    tone: "field",
-  },
-  {
-    id: "documentary-03",
-    title: "Film 03",
-    category: "Documentary",
-    meta: "Long Form",
-    video: "https://www.youtube.com/watch?v=ivhIMTe7Mu8",
-    tone: "cinema",
-  },
-];
-
-const youtubeDebugProject = {
-  id: "youtube-debug-test",
-  title: "YouTube Debug Test",
-  video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-};
-
-const youtubeIframeAttributes = {
-  allow:
-    "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
-  referrerpolicy: "strict-origin-when-cross-origin",
-  allowfullscreen: true,
-};
-
 const modal = document.querySelector(".video-modal");
 const player = document.querySelector("[data-player]");
-const closeButton = document.querySelector(".modal-close");
 const modalAudioToggle = document.querySelector("[data-modal-audio]");
+const videoInfo = document.querySelector("[data-video-info]");
+const videoInfoTitle = videoInfo.querySelector("[data-info-title]");
+const videoInfoMeta = videoInfo.querySelector("[data-info-meta]");
+const videoInfoTools = videoInfo.querySelector("[data-info-tools]");
+const videoInfoConcept = videoInfo.querySelector("[data-info-concept]");
+const videoInfoCta = videoInfo.querySelector("[data-info-cta]");
 const hero = document.querySelector(".hero");
 const heroMedia = document.querySelector(".hero-media");
 const heroPlayCursor = document.querySelector(".hero-play-cursor");
@@ -198,43 +94,24 @@ function getVideoEmbedUrl(videoUrl) {
   return `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`;
 }
 
-function getEnvironmentType() {
-  if (window.location.protocol === "file:") return "file://";
-  if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
-    return "localhost";
-  }
-  return "deployed URL";
+// Sets a project's thumbnail on an <img>, falling back to YouTube's smaller
+// image when maxresdefault does not exist; calls onFail if none can be found.
+function applyThumbnail(image, project, onFail) {
+  getProjectThumbnail(project.video)
+    .then(({ url, fallback }) => {
+      if (fallback) {
+        image.addEventListener(
+          "error",
+          () => {
+            image.src = fallback;
+          },
+          { once: true }
+        );
+      }
+      image.src = url;
+    })
+    .catch(onFail);
 }
-
-function logEnvironmentDebug() {
-  console.group("[YouTube Debug] Current environment");
-  console.log("window.location.href:", window.location.href);
-  console.log("window.location.protocol:", window.location.protocol);
-  console.log("window.location.origin:", window.location.origin);
-  console.log("environment type:", getEnvironmentType());
-  console.groupEnd();
-}
-
-function logYouTubeDebug(label, videoUrl) {
-  const provider = getVideoProvider(videoUrl);
-  const videoId = getYouTubeVideoId(videoUrl);
-  const embedUrl = getVideoEmbedUrl(videoUrl);
-
-  console.group(`[YouTube Debug] ${label}`);
-  console.log("original project.video:", videoUrl);
-  console.log("detected provider:", provider);
-  console.log("detected YouTube video ID:", videoId);
-  console.log("final iframe src:", embedUrl);
-  console.log("iframe attributes:", youtubeIframeAttributes);
-  console.groupEnd();
-}
-
-logEnvironmentDebug();
-logYouTubeDebug(
-  "Film 01",
-  projects.find((project) => project.id === "documentary-01").video
-);
-logYouTubeDebug("Known public test video", youtubeDebugProject.video);
 
 function projectCard(project) {
   const button = document.createElement("button");
@@ -252,22 +129,7 @@ function projectCard(project) {
   `;
 
   const thumbnail = button.querySelector(".project-thumbnail");
-  getProjectThumbnail(project.video)
-    .then(({ url, fallback }) => {
-      if (fallback) {
-        thumbnail.addEventListener(
-          "error",
-          () => {
-            thumbnail.src = fallback;
-          },
-          { once: true }
-        );
-      }
-      thumbnail.src = url;
-    })
-    .catch(() => {
-      thumbnail.remove();
-    });
+  applyThumbnail(thumbnail, project, () => thumbnail.remove());
 
   return button;
 }
@@ -297,6 +159,8 @@ function getFeatureEmbedUrl(videoUrl, isMuted) {
       iv_load_policy: "3",
       playsinline: "1",
       rel: "0",
+      // Lets setPlayerMuted() unmute the live player when it is expanded.
+      enablejsapi: "1",
     });
     const pageOrigin = window.location.origin;
     if (pageOrigin && pageOrigin !== "null") parameters.set("origin", pageOrigin);
@@ -319,10 +183,22 @@ function getFeatureEmbedUrl(videoUrl, isMuted) {
   return `https://player.vimeo.com/video/${videoId}?${parameters.toString()}`;
 }
 
-function initializeFeature(featureElement) {
-  const project = projects.find((item) => item.id === featureElement.dataset.feature);
-  if (!project) return;
+/* ---------------------------------------------------------------------------
+   Ambient players load only near the viewport
+   The featured players and every Short autoplay and loop, but only while they
+   are on (or about to come on) screen. Off screen, the iframe is removed, which
+   stops playback and network use; a thumbnail poster covers the gap while the
+   next iframe loads. The iframe is replaced, never re-pointed: changing an
+   iframe's src adds a browser-history entry, so scrolling would otherwise break
+   the Back button. Leaving the screen also turns that player's audio back off.
+   --------------------------------------------------------------------------- */
 
+const ambientPlayers = new Map(); // container element -> project
+const posterTimers = new WeakMap();
+// Time from the iframe's load event to the provider actually painting frames.
+const POSTER_FADE_DELAY = 700;
+
+function createAmbientFrame(project, isMuted) {
   const isYouTube = getVideoProvider(project.video) === "youtube";
   const frame = document.createElement("iframe");
   frame.title = project.title;
@@ -332,8 +208,101 @@ function initializeFeature(featureElement) {
   if (isYouTube) frame.referrerPolicy = "strict-origin-when-cross-origin";
   frame.setAttribute("allowfullscreen", "");
   frame.setAttribute("tabindex", "-1");
-  frame.src = getFeatureEmbedUrl(project.video, true);
-  featureElement.prepend(frame);
+  // Vimeo background embeds are muted, inline, autoplaying and looping;
+  // autopause=0 lets several of them play at once.
+  frame.src = getFeatureEmbedUrl(project.video, isMuted);
+  return frame;
+}
+
+// Mutes or unmutes a running embed in place through the providers' own
+// postMessage interfaces (no SDK), so the clip keeps playing without a reload.
+function setPlayerMuted(frame, project, isMuted) {
+  const target = frame.contentWindow;
+  if (!target) return;
+  if (getVideoProvider(project.video) === "youtube") {
+    const send = (func, args = []) =>
+      target.postMessage(
+        JSON.stringify({ event: "command", func, args }),
+        "https://www.youtube-nocookie.com"
+      );
+    if (isMuted) {
+      send("mute");
+    } else {
+      send("unMute");
+      send("setVolume", [100]);
+    }
+    return;
+  }
+  const send = (method, value) =>
+    target.postMessage(JSON.stringify({ method, value }), "https://player.vimeo.com");
+  send("setMuted", isMuted);
+  send("setVolume", isMuted ? 0 : 1);
+}
+
+// Element.moveBefore() moves an iframe without reloading it (Chrome/Edge 133+).
+// Elsewhere the modal falls back to building a fresh player.
+const canMoveLivePlayer = typeof Element.prototype.moveBefore === "function";
+
+function loadAmbientPlayer(element) {
+  if (element.querySelector("iframe")) return;
+  const project = ambientPlayers.get(element);
+  const frame = createAmbientFrame(project, element.dataset.muted !== "false");
+  frame.addEventListener("load", () => {
+    window.clearTimeout(posterTimers.get(element));
+    posterTimers.set(
+      element,
+      window.setTimeout(() => element.classList.add("is-playing"), POSTER_FADE_DELAY)
+    );
+  });
+  element.prepend(frame);
+}
+
+function unloadAmbientPlayer(element) {
+  window.clearTimeout(posterTimers.get(element));
+  element.classList.remove("is-playing");
+  element.querySelector("iframe")?.remove();
+  if (element.dataset.muted === "false") {
+    element.dataset.muted = "true";
+    const toggle = element.querySelector(".feature-audio-toggle");
+    if (toggle) updateAudioToggle(toggle, ambientPlayers.get(element), true);
+  }
+}
+
+const ambientObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(({ target, isIntersecting }) => {
+      // While the modal is open the page is scroll-locked; the expanded video
+      // owns playback and closeVideo() restores its source player.
+      if (modal.open) return;
+      if (isIntersecting) loadAmbientPlayer(target);
+      else unloadAmbientPlayer(target);
+    });
+  },
+  // Start loading a little before a player scrolls into view.
+  { rootMargin: "250px 0px" }
+);
+
+function registerAmbientPlayer(element, project) {
+  ambientPlayers.set(element, project);
+  element.classList.add("ambient-player");
+  element.dataset.muted = "true";
+
+  const poster = document.createElement("img");
+  poster.className = "ambient-poster";
+  poster.alt = "";
+  poster.decoding = "async";
+  poster.setAttribute("aria-hidden", "true");
+  applyThumbnail(poster, project, () => poster.remove());
+  element.prepend(poster);
+
+  ambientObserver.observe(element);
+}
+
+function initializeFeature(featureElement) {
+  const project = projects.find((item) => item.id === featureElement.dataset.feature);
+  if (!project) return;
+
+  registerAmbientPlayer(featureElement, project);
 
   const expandTrigger = document.createElement("button");
   expandTrigger.className = "video-expand-trigger";
@@ -341,7 +310,6 @@ function initializeFeature(featureElement) {
   expandTrigger.setAttribute("aria-label", `Expand ${project.title}`);
   expandTrigger.addEventListener("click", () => openLoopingVideo(project, featureElement));
   featureElement.append(expandTrigger);
-  featureElement.dataset.muted = "true";
 
   const toggle = featureElement.querySelector(".feature-audio-toggle");
   if (!toggle) return;
@@ -356,19 +324,6 @@ document.querySelectorAll(".showcase-feature").forEach(initializeFeature);
 function shortVideoCard(project) {
   const card = document.createElement("div");
   card.className = `project-card short-video-card tone-${project.tone}`;
-
-  const frame = document.createElement("iframe");
-  frame.title = project.title;
-  const isYouTube = getVideoProvider(project.video) === "youtube";
-  frame.allow = isYouTube
-    ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    : "autoplay; encrypted-media; fullscreen; picture-in-picture";
-  if (isYouTube) frame.referrerPolicy = "strict-origin-when-cross-origin";
-  frame.setAttribute("allowfullscreen", "");
-  frame.setAttribute("tabindex", "-1");
-  // The Vimeo background embed is muted, inline, autoplaying, and looping.
-  // autopause=0 is required so every Short can play at the same time.
-  frame.src = getFeatureEmbedUrl(project.video, true);
 
   const controls = document.createElement("div");
   controls.className = "showcase-feature-controls";
@@ -395,9 +350,9 @@ function shortVideoCard(project) {
   expandTrigger.type = "button";
   expandTrigger.setAttribute("aria-label", `Expand ${project.title}`);
   expandTrigger.addEventListener("click", () => openLoopingVideo(project, card));
-  card.dataset.muted = "true";
   controls.append(toggle);
-  card.append(frame, expandTrigger, controls);
+  card.append(expandTrigger, controls);
+  registerAmbientPlayer(card, project);
 
   return card;
 }
@@ -495,57 +450,122 @@ function updateAudioToggle(toggle, project, isMuted) {
   toggle.classList.toggle("is-audio-on", !isMuted);
 }
 
+// Flipping audio rebuilds the player with the new mute flag (see EDIT_LOG §3.2).
+// A player that is scrolled away has no iframe; it just picks up the new state
+// when it next loads.
 function updateAmbientVideoSource(sourceElement, project, isMuted) {
-  const frame = sourceElement.querySelector("iframe");
-  const nextSource = getFeatureEmbedUrl(project.video, isMuted);
-  if (frame.src !== nextSource) frame.src = nextSource;
+  const wasMuted = sourceElement.dataset.muted !== "false";
   sourceElement.dataset.muted = String(isMuted);
   updateAudioToggle(sourceElement.querySelector(".feature-audio-toggle"), project, isMuted);
+  if (wasMuted === isMuted || !sourceElement.querySelector("iframe")) return;
+
+  window.clearTimeout(posterTimers.get(sourceElement));
+  sourceElement.classList.remove("is-playing");
+  sourceElement.querySelector("iframe").remove();
+  loadAmbientPlayer(sourceElement);
 }
 
 function updateModalAudio(project, isMuted) {
-  const frame = player.querySelector("iframe");
-  const nextSource = getFeatureEmbedUrl(project.video, isMuted);
-  if (frame && frame.src !== nextSource) frame.src = nextSource;
+  const movedFrame = activeLoopingVideo?.movedFrame;
+  if (movedFrame) {
+    setPlayerMuted(movedFrame, project, isMuted);
+  } else if (player.querySelector("iframe")) {
+    const frame = createAmbientFrame(project, isMuted);
+    frame.removeAttribute("tabindex");
+    player.replaceChildren(frame);
+  }
   updateAudioToggle(modalAudioToggle, project, isMuted);
 }
 
+// Expanding a looping player opens it with sound on. When the browser supports
+// it and the player is already running, the live iframe itself is moved into
+// the modal, so there is no reload; closeVideo() moves it back and restores the
+// card's own audio setting. Otherwise a fresh player is built (a short load).
 function openLoopingVideo(project, sourceElement) {
-  const isMuted = sourceElement.dataset.muted !== "false";
-  activeLoopingVideo = { project, sourceElement, isMuted };
+  const sourceMuted = sourceElement.dataset.muted !== "false";
+  const liveFrame = sourceElement.querySelector("iframe");
+  const canMove =
+    canMoveLivePlayer && liveFrame && sourceElement.classList.contains("is-playing");
 
-  // Keep one audible instance only. The original is restored after the modal
-  // iframe is removed, so closing never leaves overlapping audio behind.
-  if (!isMuted) updateAmbientVideoSource(sourceElement, project, true);
-  openVideo(project.id, { looping: true, isMuted });
+  activeLoopingVideo = {
+    project,
+    sourceElement,
+    sourceMuted,
+    isMuted: false,
+    movedFrame: canMove ? liveFrame : null,
+  };
+
+  if (canMove) {
+    window.clearTimeout(posterTimers.get(sourceElement));
+    sourceElement.classList.remove("is-playing"); // poster fills the card meanwhile
+    openVideo(project.id, { looping: true, isMuted: false, liveFrame });
+    setPlayerMuted(liveFrame, project, false);
+    return;
+  }
+
+  // Fallback: keep one audible instance only. The card is restored after the
+  // modal iframe is removed, so closing never leaves overlapping audio behind.
+  if (!sourceMuted) updateAmbientVideoSource(sourceElement, project, true);
+  openVideo(project.id, { looping: true, isMuted: false });
+}
+
+// Fills the modal's project panel. Every value goes in through textContent, so
+// anything typed in projects.json renders as plain text. The panel appears only
+// when there is something beyond the title to say; otherwise the modal looks
+// exactly as it did before the panel existed.
+function fillVideoInfo(project) {
+  const clean = (value) => String(value ?? "").trim();
+  const metaParts = [project.client, project.role, project.year].map(clean).filter(Boolean);
+  const tools = clean(project.tools);
+  const concept = clean(project.concept);
+  const hasInfo = metaParts.length > 0 || tools !== "" || concept !== "";
+
+  videoInfoTitle.textContent = hasInfo ? clean(project.title) : "";
+  videoInfoMeta.textContent = metaParts.join(" · ");
+  videoInfoMeta.hidden = metaParts.length === 0;
+  videoInfoTools.textContent = tools;
+  videoInfoTools.hidden = tools === "";
+  videoInfoConcept.textContent = concept;
+  videoInfoConcept.hidden = concept === "";
+  videoInfo.hidden = !hasInfo;
+  videoInfo.querySelector(".video-info-body").scrollTop = 0;
+  modal.classList.toggle("has-info", hasInfo);
+}
+
+function clearVideoInfo() {
+  videoInfo.hidden = true;
+  modal.classList.remove("has-info");
+  [videoInfoTitle, videoInfoMeta, videoInfoTools, videoInfoConcept].forEach((element) => {
+    element.textContent = "";
+  });
 }
 
 function openVideo(projectId, options = {}) {
-  const { looping = false, isMuted = true } = options;
-  const project =
-    projects.find((item) => item.id === projectId) ??
-    (projectId === youtubeDebugProject.id ? youtubeDebugProject : projects[0]);
-  const isYouTube = getVideoProvider(project.video) === "youtube";
-  const embedUrl = looping
-    ? getFeatureEmbedUrl(project.video, isMuted)
-    : getVideoEmbedUrl(project.video);
-  if (isYouTube) {
-    logEnvironmentDebug();
-    logYouTubeDebug(project.title, project.video);
+  const { looping = false, isMuted = true, liveFrame = null } = options;
+  const project = projects.find((item) => item.id === projectId) ?? projects[0];
+
+  if (liveFrame) {
+    player.replaceChildren();
+    player.moveBefore(liveFrame, null);
+  } else {
+    const isYouTube = getVideoProvider(project.video) === "youtube";
+    const embedUrl = looping
+      ? getFeatureEmbedUrl(project.video, isMuted)
+      : getVideoEmbedUrl(project.video);
+    // Built with DOM APIs, not an HTML string: titles are editable content now,
+    // and a quote in one must not break the iframe markup.
+    const frame = document.createElement("iframe");
+    frame.title = project.title;
+    frame.src = embedUrl;
+    frame.allow = isYouTube
+      ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      : "autoplay; encrypted-media; fullscreen; picture-in-picture";
+    if (isYouTube) frame.referrerPolicy = "strict-origin-when-cross-origin";
+    frame.setAttribute("allowfullscreen", "");
+    player.replaceChildren(frame);
   }
-  const playerAttributes = isYouTube
-    ? `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      referrerpolicy="strict-origin-when-cross-origin"`
-    : `allow="autoplay; encrypted-media; fullscreen; picture-in-picture"`;
-  player.innerHTML = `
-    <iframe
-      title="${project.title}"
-      src="${embedUrl}"
-      ${playerAttributes}
-      allowfullscreen
-    ></iframe>
-  `;
   modal.classList.toggle("is-portrait", project.category === "Shorts & Reels");
+  fillVideoInfo(project);
   modalAudioToggle.hidden = !looping;
   if (looping) updateAudioToggle(modalAudioToggle, project, isMuted);
   modal.classList.remove("is-visible", "is-closing");
@@ -573,8 +593,6 @@ modalAudioToggle.addEventListener("click", () => {
   activeLoopingVideo.isMuted = !activeLoopingVideo.isMuted;
   updateModalAudio(activeLoopingVideo.project, activeLoopingVideo.isMuted);
 });
-
-window.testYouTubeEmbed = () => openVideo(youtubeDebugProject.id);
 
 const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
 let cursorTargetX = 0;
@@ -668,21 +686,34 @@ hero.addEventListener("keydown", (event) => {
   openVideo("showreel");
 });
 
-function closeVideo() {
+function closeVideo(onClosed) {
   if (!modal.open || modal.classList.contains("is-closing")) return;
 
   function finishClose() {
+    const looping = activeLoopingVideo;
+    activeLoopingVideo = null;
+
+    // A live player borrowed from its card goes back without reloading, and the
+    // card returns to its own audio setting (not the modal's).
+    if (looping?.movedFrame && looping.sourceElement.isConnected) {
+      const { project, sourceElement, movedFrame, sourceMuted } = looping;
+      sourceElement.moveBefore(movedFrame, sourceElement.firstChild);
+      setPlayerMuted(movedFrame, project, sourceMuted);
+      sourceElement.classList.add("is-playing");
+    }
+
     modal.classList.remove("is-visible", "is-opening", "is-closing");
     modal.close();
     player.innerHTML = "";
     modalAudioToggle.hidden = true;
     modal.classList.remove("is-portrait");
-    if (activeLoopingVideo) {
-      const { project, sourceElement, isMuted } = activeLoopingVideo;
-      updateAmbientVideoSource(sourceElement, project, isMuted);
-      activeLoopingVideo = null;
+    clearVideoInfo();
+    if (looping && !looping.movedFrame) {
+      const { project, sourceElement, sourceMuted } = looping;
+      updateAmbientVideoSource(sourceElement, project, sourceMuted);
     }
     document.body.classList.remove("modal-open");
+    if (typeof onClosed === "function") onClosed();
   }
 
   if (reducedMotion.matches) {
@@ -701,7 +732,16 @@ document.addEventListener("click", (event) => {
   openVideo(trigger.dataset.video);
 });
 
-closeButton.addEventListener("click", closeVideo);
+// No × button by design: the modal closes on a backdrop click or Esc only.
+// "Work with me" in the project panel: close the player, bring the contact
+// section into view, and open the message form if it is not already showing.
+videoInfoCta.addEventListener("click", () => {
+  closeVideo(() => {
+    const contactSection = document.querySelector("#contact");
+    contactSection.scrollIntoView({ behavior: reducedMotion.matches ? "auto" : "smooth" });
+    if (!contactSwitcher.classList.contains("is-form")) contactToggle.click();
+  });
+});
 modal.addEventListener("click", (event) => {
   if (event.target === modal) closeVideo();
 });
@@ -872,6 +912,12 @@ if (!reducedMotion.matches) {
   workflowObserver.observe(workflow);
 }
 
+// EmailJS public key (safe to ship: it only allows sending through the
+// configured template). The SDK loads with `defer` from index.html, and in the
+// production build this module can run before it, so the key is passed on each
+// send instead of through emailjs.init() at startup.
+const EMAILJS_PUBLIC_KEY = "PSLVaeR7Fv7l-KVyg";
+
 const contactToggle = document.querySelector(".contact-toggle");
 const contactSwitcher = document.querySelector(".contact-switcher");
 const contactSocials = document.querySelector(".contact-socials");
@@ -922,7 +968,9 @@ contactForm.addEventListener("submit", async (event) => {
 
   try {
     if (!window.emailjs) throw new Error("EmailJS SDK failed to load");
-    await window.emailjs.send("service_portfolio", "template_pm58y13", templateParams);
+    await window.emailjs.send("service_portfolio", "template_pm58y13", templateParams, {
+      publicKey: EMAILJS_PUBLIC_KEY,
+    });
     contactForm.reset();
     formStatus.textContent = "";
     successTitle.textContent = `Thanks, ${templateParams.from_name}.`;

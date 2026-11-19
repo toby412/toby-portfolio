@@ -43,6 +43,11 @@
     <title>Toby Yu | Video Editor &amp; Motion Graphic Designer</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://player.vimeo.com" />
+    <!-- Thumbnails and lazily loaded players: resolve DNS early, connect on demand. -->
+    <link rel="dns-prefetch" href="https://vimeo.com" />
+    <link rel="dns-prefetch" href="https://i.vimeocdn.com" />
+    <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
+    <link rel="dns-prefetch" href="https://i.ytimg.com" />
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
@@ -417,25 +422,41 @@
     </footer>
 
     <dialog class="video-modal" aria-label="Video player">
-      <div class="modal-panel">
-        <button class="modal-close" type="button" aria-label="Close video">×</button>
-        <div class="video-frame" data-player></div>
-        <button class="feature-audio-toggle modal-audio-toggle" type="button" data-modal-audio hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
-            <path d="m17 9 4 6M21 9l-4 6"></path>
-          </svg>
-          <span>Audio Off</span>
-        </button>
+      <!-- autofocus keeps focus on the page, not inside the video iframe, so Esc closes the modal. -->
+      <div class="modal-panel" tabindex="-1" autofocus>
+        <div class="modal-stage">
+          <div class="video-frame" data-player></div>
+          <button class="feature-audio-toggle modal-audio-toggle" type="button" data-modal-audio hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
+              <path d="m17 9 4 6M21 9l-4 6"></path>
+            </svg>
+            <span>Audio Off</span>
+          </button>
+        </div>
+        <!-- Project details, filled from src/projects.json by fillVideoInfo() in main.js. -->
+        <aside class="video-info" data-video-info aria-label="Project details" hidden>
+          <div class="video-info-body">
+            <p class="eyebrow video-info-eyebrow">Project</p>
+            <h2 class="video-info-title" data-info-title></h2>
+            <p class="video-info-meta" data-info-meta hidden></p>
+            <p class="video-info-tools" data-info-tools hidden></p>
+            <p class="video-info-concept" data-info-concept hidden></p>
+          </div>
+          <button class="video-info-cta" type="button" data-info-cta>
+            <span>Work with me</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 17 17 7"></path>
+              <path d="M7 7h10v10"></path>
+            </svg>
+          </button>
+        </aside>
       </div>
     </dialog>
 
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script>
-      if (window.emailjs) {
-        window.emailjs.init({ publicKey: "PSLVaeR7Fv7l-KVyg" });
-      }
-    </script>
+    <!-- defer: the contact form is at the bottom, so the SDK must not hold up the page.
+         src/main.js passes the public key on each send, so script order does not matter. -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -22,14 +22,16 @@ something that was already fixed on purpose.
 | **Deploy** | GitHub Actions → GitHub Pages (`.github/workflows/deploy-pages.yml`), on every push to `main` |
 | **Vite base** | `/toby-portfolio/` (set in `vite.config.js`; required for the Pages subpath) |
 | **Analytics** | GA4 `G-ZWM4MR7ZGT` via `src/analytics.js` |
-| **Contact form** | EmailJS (`service_portfolio` / `template_pm58y13`, public key in `index.html`) |
+| **Contact form** | EmailJS (`service_portfolio` / `template_pm58y13`, public key `EMAILJS_PUBLIC_KEY` in `src/main.js`, passed on each `send`) |
 
 ### File map
 
 | File | Role |
 |---|---|
-| `index.html` | All page markup, SEO meta + Person JSON-LD, the `<dialog>` video modal, EmailJS bootstrap |
-| `src/main.js` | **Video showcase system**: project registry, thumbnails, carousels, modal player, hero, stats, contact form |
+| `index.html` | All page markup, SEO meta + Person JSON-LD, the `<dialog>` video modal (+ project details panel), EmailJS bootstrap |
+| `src/projects.json` | **Video registry** — every video's URL, title, category and project details (client, role, year, tools, concept) |
+| `src/main.js` | **Video showcase system**: thumbnails, carousels, modal player + details panel, hero, stats, contact form |
+| `editor.html` | Local editor for `src/projects.json`. Double-click → opens in Chrome/Edge; saves via the File System Access API. **Not part of the build** (Vite only bundles `index.html`). |
 | `src/styles.css` | All styling and responsive layout (breakpoints at 1100px / 900px / 580px) |
 | `src/analytics.js` | GA4 loader + SPA-style page-view tracking |
 | `public/` | Files copied verbatim to the build root (Google Search Console verification) |
@@ -55,8 +57,10 @@ This is the heart of the site. Four surfaces play video, and they behave differe
 
 ### 2.1 Video registry
 
-All clips are declared in one array — `projects` at the top of [src/main.js](src/main.js#L5).
-Nothing else hardcodes a video URL **except** the two background embeds noted below.
+All clips are declared in one file — [src/projects.json](src/projects.json), imported by `src/main.js`.
+Nothing else hardcodes a video URL **except** the hero background embed noted below.
+The owner edits titles and project details through [editor.html](editor.html); structural changes
+(adding/removing/reordering videos, changing categories) are still done by hand in the JSON.
 
 | `id` | Title | `category` | Provider | Video | Where it appears |
 |---|---|---|---|---|---|
@@ -82,6 +86,10 @@ embed is the hero background `<iframe src>` in [index.html](index.html#L75) → 
 `tone` and `meta` are legacy fields: `tone` only sets a `tone-*` CSS class on the card; `meta` is
 currently not rendered. Keep them populated for consistency; neither is load-bearing.
 
+`client`, `role`, `year`, `tools`, `concept` (all strings, may be empty) feed the modal's project
+details panel. The panel only appears when at least one of them is non-empty; `title` alone does
+not trigger it. `concept` keeps line breaks (`white-space: pre-line`).
+
 ### 2.2 How sections are populated
 
 Brand & Commercial and Films & Documentary render the shared `.video-showcase`: one ambient
@@ -102,8 +110,8 @@ own `.shorts-video-list` so all five ambient embeds can be visible without carou
 - `data-category` / `data-exclude` — JS fills the Brand and Documentary rails with their remaining clips.
 - `shortProjectOrder` — JS fills the direct Short list in its explicit right-to-left visual order.
 
-**To add a video:** append an object to `projects` with a matching `category`; it appears in that
-section's rail automatically. **To change a featured video:** point `data-feature` at another id in
+**To add a video:** append an object to `src/projects.json` with a matching `category` (include the
+five detail fields as empty strings); it appears in that section's rail automatically. **To change a featured video:** point `data-feature` at another id in
 the same category and update that section's `data-exclude` to match.
 
 ### 2.3 Provider handling (Vimeo + YouTube)
@@ -130,6 +138,26 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
 - The whole section is `role="button"` — click or Enter/Space opens `showreel` in the modal.
 - Custom follow-cursor play badge and iframe parallax (±18px / ±14px), fine pointers only, both
   disabled under `prefers-reduced-motion`.
+
+**Ambient players load only near the viewport** (featured players + every Short; the hero is exempt)
+- `registerAmbientPlayer()` gives each container a thumbnail `.ambient-poster` and an
+  `IntersectionObserver` (`rootMargin: 250px 0px`). In range → `loadAmbientPlayer()` creates the
+  iframe; out of range → `unloadAmbientPlayer()` removes it and resets that player's audio to Off.
+- The poster fades out 700ms after the iframe's `load` event (`.is-playing`) and is back whenever
+  the player is unloaded, so there is no black flash.
+- Iframes are **replaced, never re-pointed**: setting an existing iframe's `src` adds a session
+  history entry, so scrolling (and audio toggles) used to stack up Back-button steps. Verified:
+  `history.length` stays 2 after scrolling the whole page down and up.
+- The observer ignores entries while the modal is open; `closeVideo()` restores the source player.
+- **Expanding a looping player is instant and opens with sound on.** In browsers with
+  `Element.moveBefore()` (Chrome/Edge 133+) and once the card is `.is-playing`,
+  `openLoopingVideo()` moves the *live* iframe into the modal (no reload) and unmutes it with
+  `setPlayerMuted()` — Vimeo `{method:"setMuted"/"setVolume"}` / YouTube
+  `{event:"command",func:"unMute"}` postMessages (YouTube ambient URLs carry `enablejsapi=1` for
+  this). The modal's audio toggle uses the same messages. `closeVideo()` moves the iframe back and
+  re-applies the card's own audio setting (`sourceMuted`), not the modal's. Other browsers build a
+  fresh player with `muted=0` (a short load).
+- Effect: at page load only the hero iframe loads (previously 8 iframes at once).
 
 **Brand & Commercial and Films & Documentary — `.video-showcase`**
 - Two-column grid, `1.42fr / 0.78fr`, capped at `1000px`, gap `clamp(18px, 2.6vw, 34px)`.
@@ -165,9 +193,21 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
 - Opened by rail cards, the hero, or the transparent expand layer on every looping player. Looping
   videos preserve their 9:16 or 16:9 ratio in the modal and gain a matching audio control.
 - Native `<dialog>.showModal()`, animated via `is-opening` → `is-visible` → `is-closing`.
-- Close = X button, backdrop click, or Esc (through the dialog's **`cancel` event**).
+- Close = backdrop click or Esc (through the dialog's **`cancel` event**). There is **no × button**
+  (removed 2026-11-19 at the owner's request). `.modal-panel` has `tabindex="-1" autofocus` so
+  `showModal()` focuses the panel rather than the video iframe — a focused cross-origin player
+  swallows Esc.
 - Close waits `320ms`, then sets `player.innerHTML = ""`. **That teardown is what stops playback.**
   A temporarily muted source player restores its audio state only after this teardown.
+- The iframe is built with `createElement` (not an HTML string) because titles are editable content.
+- **Project details panel** (`.video-info`, filled by `fillVideoInfo()`, cleared in `closeVideo()`):
+  - Desktop (>900px): two columns, video left, details right (`--info-width: clamp(280px, 27vw, 360px)`).
+    The details column uses `contain: size` so the video alone sets the height; only
+    `.video-info-body` scrolls, keeping "Work with me" pinned at the bottom.
+  - ≤900px: details stack under the video, capped at `40svh`; portrait videos shrink to `42svh` tall.
+  - "Work with me" closes the modal (via `closeVideo(onClosed)`), scrolls to `#contact`, and opens the form.
+- Modal size is capped by viewport height (`--modal-max-h: 100svh - 140px`) so there is always
+  backdrop above and below it to tap (the only close control on phones).
 
 ### 2.5 Accessibility & motion conventions
 
@@ -190,9 +230,10 @@ These look like bugs or omissions. They are not. Changing them re-opens a solved
    built finite. The clone system was removed, not disabled — do not reintroduce it without a
    much larger library.
 
-2. **The audio toggle reloads the iframe `src` instead of using a player SDK.**
-   Both providers autoplay and loop reliably from URL parameters alone. Rebuilding the src with the
-   mute flag flipped preserves that path at the cost of restarting the clip. Loading the Vimeo
+2. **The audio toggle rebuilds the player instead of using a player SDK.**
+   Both providers autoplay and loop reliably from URL parameters alone. Rebuilding the embed with the
+   mute flag flipped preserves that path at the cost of restarting the clip. Since 2026-11-19 the
+   iframe element is replaced rather than its `src` changed, to keep browser history clean (§2.4). Loading the Vimeo
    Player SDK or YouTube IFrame API would avoid the restart but re-introduces the autoplay-policy
    edge cases this replaced. Applies to all three showcases.
 
@@ -223,6 +264,16 @@ These look like bugs or omissions. They are not. Changing them re-opens a solved
 10. **`vite.config.js` `base: "/toby-portfolio/"` must stay** while the site is served from GitHub
     Pages under that subpath. Removing it breaks every asset URL in production.
 
+11. **The video modal has no × button, on purpose.** It closes on a backdrop click or Esc. Do not
+    remove `tabindex="-1" autofocus` from `.modal-panel`: without a focusable control, `showModal()`
+    focuses the video iframe and Esc stops working. Known trade-off: after the viewer clicks inside
+    the player itself, the player holds keyboard focus and Esc does nothing until they click the
+    backdrop.
+
+12. **`src/projects.json` is written by `editor.html`** as `JSON.stringify(data, null, 2)` plus a
+    trailing newline. Keep that exact format when editing by hand, or the next editor save produces
+    a noisy diff. Do not move the registry back into `main.js` — the editor can only edit the JSON.
+
 ## 4. Known Open Items
 
 Recorded, not yet acted on. None is currently breaking the site.
@@ -237,10 +288,10 @@ Recorded, not yet acted on. None is currently breaking the site.
   **If it recurs in real Safari, capture `getComputedStyle(el).gridTemplateColumns` (used track
   sizes) alongside the feature's `getBoundingClientRect().width`** — if they match, the track is
   wrong; if they differ, the item is shrinking inside a correct track.
-- **YouTube debug instrumentation still ships to production.** `logEnvironmentDebug()`,
-  `logYouTubeDebug()` and the `youtubeDebugProject` / `window.testYouTubeEmbed()` helper in
-  [src/main.js](src/main.js#L88) run on every page load and print console groups. Harmless but
-  noisy; left in place because it is the documented debug entry point for the YouTube path.
+- **Headless/automated Chrome cannot play the Vimeo embeds** (Vimeo shows "We couldn't verify the
+  security of your connection" and logs a 401). That is Vimeo's bot protection, not a site bug —
+  automated checks can verify loading/unloading and DOM state, but playback must be eyeballed in a
+  normal browser.
 - **Vimeo thumbnails depend on a live oEmbed fetch** with no placeholder state, so cards can flash
   empty on a slow network. Rail thumbnails are `loading="lazy"`, so they only fetch once scrolled
   into view — expected, not a bug.
@@ -250,6 +301,66 @@ Recorded, not yet acted on. None is currently breaking the site.
 ## 5. Change History
 
 Newest first. Dates are the commit/authoring date.
+
+### 2026-11-19 — Instant expand with sound
+
+- **Section affected:** Modal; Brand & Commercial, Shorts & Reels, Films & Documentary featured/short players.
+- **What changed:** Expanding a looping player no longer reloads it (Chrome/Edge): the live iframe is
+  moved into the modal with `moveBefore()` and unmuted via postMessage. The expanded video now
+  always starts with sound on; closing returns the card to its previous audio state.
+- **Videos:** none. YouTube ambient embed URLs gained `enablejsapi=1`.
+- **Layout/interaction:** The card shows its thumbnail poster while its player is in the modal.
+- **Implementation notes:** Verified headlessly that the same iframe element travels to the modal
+  and back, the card's audio label/state are restored, `history.length` is unchanged, and the
+  no-`moveBefore` fallback builds a `muted=0` player. **Not verifiable headlessly:** that the
+  postMessage unmute is audible (Vimeo blocks automated browsers) — check by ear in Chrome.
+- **Fixed / reverted:** Previously closing the modal carried the modal's audio choice back to the
+  card; it now restores the card's own setting.
+
+### 2026-11-19 — Performance: viewport-loaded ambient players, debug code removed
+
+- **Section affected:** Brand & Commercial, Shorts & Reels, Films & Documentary, modal, `<head>`, contact form.
+- **What changed:** The two featured players and five Shorts no longer all start at page load. Each
+  loads when it comes within 250px of the viewport and is removed when it leaves, with a thumbnail
+  poster covering the load. Removed the YouTube debug instrumentation (`logEnvironmentDebug`,
+  `logYouTubeDebug`, `youtubeDebugProject`, `window.testYouTubeEmbed`); the `file://` warning stays.
+  EmailJS SDK now loads with `defer`; the public key is passed to each `emailjs.send` (the
+  production build hoists the module script into `<head>`, so it can run before the SDK).
+  Added `dns-prefetch` for vimeo.com, i.vimeocdn.com, youtube-nocookie.com, i.ytimg.com.
+- **Videos:** none changed. Embed URLs and parameters (autoplay, loop, muted, playlist, quality) unchanged.
+- **Layout/interaction:** Same look. Leaving the screen turns a player's audio back Off. Audio
+  toggles (on cards and in the modal) replace the iframe instead of changing its `src`.
+- **Implementation notes:** Shared `createAmbientFrame()` replaces the two duplicated iframe
+  builders; `applyThumbnail()` is shared by rail cards and posters. Verified on the production build
+  (`vite preview`) at 1440×900 and 390×844: 1 iframe at load (was 8), players load/unload while
+  scrolling, `history.length` constant, audio resets off-screen, modal expand/close restores the
+  source player, contact form succeeds with an intercepted EmailJS request carrying the key, no
+  page errors. Playback itself could not be checked headlessly (see §4).
+- **Fixed / reverted:** Removed the "debug instrumentation ships to production" open item.
+
+### 2026-11-19 — Project details in the video modal + local editor
+
+- **Section affected:** Modal; video registry; new `editor.html`.
+- **What changed:** The `projects` array moved out of `src/main.js` into `src/projects.json` (same
+  data, plus empty `client` / `role` / `year` / `tools` / `concept` fields). The modal now shows a
+  project details panel with a "Work with me" button when any of those fields is filled. New
+  `editor.html` lets the owner edit those fields (and title / video URL) in Chrome/Edge with
+  thumbnails, a live preview of the panel, unsaved-change tracking and ⌘S save.
+- **Videos:** none added or removed; no IDs changed.
+- **Layout/interaction:** Desktop modal widens to up to 1280px (portrait: video ≤460px + details
+  column) only when details exist; videos without details look as before. On ≤900px the details
+  stack under the video. Modal width is now also capped by viewport height so the × never leaves the
+  screen. See §2.4 Modal player.
+- **Implementation notes:** Panel text is set via `textContent` only. The editor stores the folder
+  handle in IndexedDB (Chrome asks for permission again per visit), refuses to save an
+  unrecognised video URL, and warns before overwriting a `projects.json` that changed on disk
+  after it was opened. Publishing is still `git add src/projects.json && git commit && git push`.
+  Verified in headless Chrome at 1440×900, 1100×700, 390×844, 375×667 (panel layout, × position,
+  Work-with-me flow, no console errors) and an editor round-trip against a copy of the JSON
+  (diff limited to the edited lines).
+- **Fixed / reverted:** The modal × close button had been invisible all along (clipped by the
+  dialog's default `overflow: auto`). It was briefly made visible, then **removed** at the owner's
+  request; the modal now closes on backdrop click or Esc only — see §3.11.
 
 ### 2026-11-19 — Desktop Shorts carousel with wheel scrolling
 

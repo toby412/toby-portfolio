@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>作品資訊編輯器</title>
+<!--
+  Local editor for src/projects.json (the video registry the site reads).
+  Open this file directly in Chrome or Edge (double-click). It reads and writes
+  the file through the browser's File System Access API, so nothing is uploaded
+  anywhere. It is not part of the website build: Vite only bundles index.html.
+-->
+<style>
+  :root {
+    --ink: #191816;
+    --muted: #68645d;
+    --faint: #9a958c;
+    --paper: #fbfaf6;
+    --card: #ffffff;
+    --soft: #f3f1ec;
+    --line: rgba(25, 24, 22, 0.1);
+    --accent: #f5a31a;
+    --accent-strong: #f18b00;
+    --accent-soft: rgba(245, 163, 26, 0.14);
+    --ok: #2f9e5b;
+    --danger: #c8442f;
+    --radius: 10px;
+    --shadow: 0 24px 70px rgba(37, 32, 24, 0.14);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+
+  :focus-visible {
+    outline: 2px solid rgba(245, 163, 26, 0.8);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    padding: 14px clamp(16px, 4vw, 40px);
+    background: rgba(251, 250, 246, 0.86);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand { display: flex; flex-direction: column; gap: 2px; margin-right: auto; }
+  .brand strong { font-size: 16px; font-weight: 600; }
+  .brand span { color: var(--muted); font-size: 12px; }
+  .brand .folder { color: var(--ink); font-weight: 500; }
+
+  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 13px;
+    font-weight: 500;
+    transition: transform 200ms var(--ease), box-shadow 200ms var(--ease), background 200ms;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37, 32, 24, 0.08); }
+  .btn:disabled { opacity: 0.45; }
+  .btn-primary { border-color: transparent; background: var(--accent); color: #fff; }
+  .btn-primary:hover:not(:disabled) { box-shadow: 0 8px 22px rgba(245, 163, 26, 0.32); }
+  .btn-ghost { background: transparent; }
+  .btn kbd {
+    font: inherit;
+    font-size: 11px;
+    opacity: 0.75;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .dirty-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .dirty-pill::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  main { padding: clamp(20px, 4vw, 40px); max-width: 1320px; margin: 0 auto; }
+
+  /* ---------- Banners and empty state ---------- */
+  .banner {
+    margin-bottom: 24px;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .banner.warn { border-color: rgba(200, 68, 47, 0.3); background: #fff6f3; }
+  .banner strong { display: block; margin-bottom: 4px; }
+
+  .welcome {
+    max-width: 620px;
+    margin: 8vh auto;
+    padding: clamp(24px, 4vw, 40px);
+    border-radius: 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .eyebrow {
+    margin: 0 0 12px;
+    color: var(--accent-strong);
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+  }
+  .welcome h1 { margin: 0 0 12px; font-size: clamp(24px, 3vw, 30px); font-weight: 500; }
+  .welcome p { margin: 0 0 16px; color: var(--muted); line-height: 1.7; font-size: 14px; }
+  .welcome ol { margin: 0 0 24px; padding-left: 20px; color: var(--muted); line-height: 1.9; font-size: 14px; }
+  .welcome code { padding: 1px 6px; border-radius: 5px; background: var(--soft); color: var(--ink); font-size: 13px; }
+  .welcome .welcome-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* ---------- Grid ---------- */
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 16px;
+    margin-bottom: 28px;
+  }
+  .summary h1 { margin: 0; font-size: clamp(22px, 2.6vw, 28px); font-weight: 500; }
+  .summary p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .category { margin-bottom: 40px; }
+  .category h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .category h2 span { color: var(--faint); font-size: 12px; font-weight: 400; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--card);
+    text-align: left;
+    overflow: hidden;
+    transition: transform 240ms var(--ease), box-shadow 240ms var(--ease), border-color 240ms;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .card.is-dirty { border-color: rgba(245, 163, 26, 0.65); }
+
+  .thumb {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #2b2925, #11100e);
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity 300ms;
+  }
+  .thumb img.is-loaded { opacity: 1; }
+  .thumb .provider {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .thumb .unsaved {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .card-body { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; }
+  .card-title { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+  .card-id { color: var(--faint); font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .progress { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--muted); font-size: 12px; }
+  .progress-bar { flex: 1; height: 4px; border-radius: 999px; background: var(--soft); overflow: hidden; }
+  .progress-bar i { display: block; height: 100%; background: var(--faint); border-radius: inherit; }
+  .progress.is-complete .progress-bar i { background: var(--ok); }
+  .progress.is-partial .progress-bar i { background: var(--accent); }
+
+  /* ---------- Edit drawer ---------- */
+  .drawer {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(560px, 100%);
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--paper);
+    box-shadow: -24px 0 70px rgba(37, 32, 24, 0.18);
+  }
+  .drawer::backdrop { background: rgba(25, 24, 22, 0.32); }
+  .drawer[open] { display: flex; flex-direction: column; animation: slide-in 320ms var(--ease); }
+  @keyframes slide-in { from { transform: translateX(40px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .drawer[open] { animation: none; } }
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .drawer-head .counter { margin-right: auto; color: var(--muted); font-size: 13px; }
+  .icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .icon-btn:disabled { opacity: 0.35; }
+
+  .drawer-scroll { flex: 1; overflow-y: auto; padding: 20px 22px 28px; }
+
+  .drawer-media { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 22px; }
+  .drawer-media .thumb { width: 180px; flex: none; border-radius: 8px; }
+  .drawer-media .meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-size: 13px; color: var(--muted); }
+  .drawer-media .meta strong { color: var(--ink); font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+  .drawer-media a { color: var(--accent-strong); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .field label { font-size: 13px; font-weight: 500; }
+  .field label small { color: var(--faint); font-weight: 400; margin-left: 4px; }
+  .field input, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 14px;
+    line-height: 1.5;
+    transition: border-color 200ms, box-shadow 200ms;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .field textarea { min-height: 150px; resize: vertical; }
+  .field .hint { color: var(--faint); font-size: 12px; line-height: 1.5; }
+  .field .hint.error { color: var(--danger); }
+  .field input.is-invalid { border-color: var(--danger); }
+  .field .count { align-self: flex-end; color: var(--faint); font-size: 12px; }
+
+  .section-label {
+    margin: 26px 0 12px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* Mirrors the site's modal panel so the text can be judged in place. */
+  .preview {
+    padding: 22px 24px;
+    border-radius: 10px;
+    background: #070706;
+    color: rgba(255, 255, 255, 0.86);
+  }
+  .preview .p-eyebrow { margin: 0 0 10px; color: var(--accent); font-size: 10px; letter-spacing: 0.4em; text-transform: uppercase; }
+  .preview .p-title { margin: 0 0 10px; color: #fff; font-size: 20px; font-weight: 500; line-height: 1.2; overflow-wrap: anywhere; }
+  .preview .p-meta { margin: 0 0 4px; color: rgba(255, 255, 255, 0.62); font-size: 13px; }
+  .preview .p-tools { margin: 0; color: rgba(255, 255, 255, 0.46); font-size: 12px; letter-spacing: 0.04em; }
+  .preview .p-concept {
+    margin: 16px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+  .preview .p-cta {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .preview-empty { color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+  .drawer-foot {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 14px 18px;
+    border-top: 1px solid var(--line);
+    background: var(--card);
+  }
+  .drawer-foot .left { margin-right: auto; }
+
+  /* ---------- Toast and publish panel ---------- */
+  /* A popover, so it renders in the top layer above the open edit drawer. */
+  .toast {
+    position: fixed;
+    inset: auto auto 24px 50%;
+    margin: 0;
+    border: 0;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 32px));
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--ink);
+    color: #fff;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .toast.error { background: var(--danger); }
+  .toast .toast-head { display: flex; align-items: center; gap: 10px; }
+  .toast .toast-head strong { margin-right: auto; }
+  .toast .toast-close { border: 0; background: transparent; color: rgba(255, 255, 255, 0.7); font-size: 18px; }
+  .toast p { margin: 6px 0 0; color: rgba(255, 255, 255, 0.75); font-size: 13px; }
+  .cmd {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .cmd code {
+    flex: 1;
+    min-width: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+  .cmd button {
+    flex: none;
+    padding: 5px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 600px) {
+    .field-row { grid-template-columns: 1fr; }
+    .drawer-media { flex-direction: column; }
+    .drawer-media .thumb { width: 100%; }
+    .btn kbd { display: none; }
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <strong>作品資訊編輯器</strong>
+      <span data-status>尚未連接專案資料夾</span>
+    </div>
+    <div class="actions">
+      <span class="dirty-pill" data-dirty-pill hidden>未儲存的變更</span>
+      <button class="btn btn-ghost" type="button" data-action="discard" hidden>捨棄變更</button>
+      <button class="btn btn-ghost" type="button" data-action="change-folder" hidden>換資料夾</button>
+      <button class="btn btn-primary" type="button" data-action="save" disabled hidden>
+        儲存 <kbd data-save-shortcut>⌘S</kbd>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="banner warn" data-unsupported hidden>
+      <strong>這個瀏覽器不支援直接存檔</strong>
+      請用 <b>Google Chrome</b> 或 <b>Microsoft Edge</b> 開啟這個檔案（右鍵 → 打開方式 → Google Chrome）。Safari 和 Firefox 無法讓網頁寫入你電腦上的檔案。
+    </div>
+
+    <section class="welcome" data-welcome>
+      <p class="eyebrow">Portfolio Editor</p>
+      <h1>編輯每支影片的專案資訊</h1>
+      <p>這裡填的內容會在網站上點開影片時，顯示在影片右邊（手機上在影片下方）。</p>
+      <ol>
+        <li>按下「選擇專案資料夾」，選 <code>Website</code> 這個資料夾（裡面有 <code>index.html</code> 的那個）。</li>
+        <li>Chrome 會問你是否允許編輯，選「允許」。</li>
+        <li>點任何一支影片開始填寫，完成後按「儲存」。</li>
+        <li>儲存後，把畫面上的 git 指令貼到 Terminal（或請 Claude 幫你 push），網站幾分鐘後就會更新。</li>
+      </ol>
+      <div class="welcome-actions">
+        <button class="btn btn-primary" type="button" data-action="reconnect" hidden></button>
+        <button class="btn" type="button" data-action="pick">選擇專案資料夾</button>
+      </div>
+    </section>
+
+    <section data-workspace hidden>
+      <div class="summary">
+        <h1>所有影片</h1>
+        <p data-summary></p>
+      </div>
+      <div data-categories></div>
+    </section>
+  </main>
+
+  <dialog class="drawer" data-drawer aria-labelledby="drawer-title">
+    <div class="drawer-head">
+      <span class="counter" data-counter></span>
+      <button class="icon-btn" type="button" data-action="prev" aria-label="上一支影片">‹</button>
+      <button class="icon-btn" type="button" data-action="next" aria-label="下一支影片">›</button>
+      <button class="icon-btn" type="button" data-action="close" aria-label="關閉">×</button>
+    </div>
+
+    <div class="drawer-scroll">
+      <div class="drawer-media">
+        <span class="thumb" data-drawer-thumb></span>
+        <div class="meta">
+          <strong id="drawer-title" data-drawer-title></strong>
+          <span data-drawer-sub></span>
+          <a data-drawer-link target="_blank" rel="noreferrer">在新分頁觀看影片 ↗</a>
+        </div>
+      </div>
+
+      <form data-form autocomplete="off">
+        <div class="field">
+          <label for="f-title">影片名稱 <small>Title</small></label>
+          <input id="f-title" name="title" type="text" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-client">客戶 <small>Client</small></label>
+            <input id="f-client" name="client" type="text" placeholder="例如：Nike Taiwan" />
+          </div>
+          <div class="field">
+            <label for="f-role">你的角色 <small>Role</small></label>
+            <input id="f-role" name="role" type="text" placeholder="例如：Editor & Motion Design" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-year">年份 <small>Year</small></label>
+            <input id="f-year" name="year" type="text" inputmode="numeric" placeholder="例如：2025" />
+          </div>
+          <div class="field">
+            <label for="f-tools">使用工具 <small>Tools</small></label>
+            <input id="f-tools" name="tools" type="text" placeholder="例如：Premiere Pro, After Effects" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-concept">製作理念 <small>Concept</small></label>
+          <textarea id="f-concept" name="concept" placeholder="這支影片想傳達什麼？你怎麼剪、為什麼這樣剪？2–4 句就夠了。按 Enter 可以分段。"></textarea>
+          <span class="count" data-concept-count></span>
+        </div>
+        <div class="field">
+          <label for="f-video">影片連結 <small>Video URL</small></label>
+          <input id="f-video" name="video" type="url" spellcheck="false" />
+          <span class="hint" data-video-hint>Vimeo 或 YouTube 網址。一般不需要改。</span>
+        </div>
+      </form>
+
+      <p class="section-label">網站上的樣子</p>
+      <div class="preview" data-preview></div>
+    </div>
+
+    <div class="drawer-foot">
+      <button class="btn btn-ghost left" type="button" data-action="revert-one">還原這支影片</button>
+      <button class="btn" type="button" data-action="close">完成</button>
+      <button class="btn btn-primary" type="button" data-action="save" disabled>儲存</button>
+    </div>
+  </dialog>
+
+  <div class="toast" data-toast popover="manual" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const EDITABLE_FIELDS = ["title", "client", "role", "year", "tools", "concept", "video"];
+  const INFO_FIELDS = ["client", "role", "year", "tools", "concept"];
+  const CATEGORY_LABELS = {
+    Showreel: "Showreel（首頁）",
+    Commercial: "Brand & Commercial",
+    "Shorts & Reels": "Shorts & Reels",
+    Documentary: "Films & Documentary",
+  };
+  const PUBLISH_COMMAND =
+    'git add src/projects.json && git commit -m "Update video info" && git push';
+  const DB_NAME = "portfolio-editor";
+  const STORE = "handles";
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  const state = {
+    rootHandle: null,
+    fileHandle: null,
+    fileLastModified: 0,
+    original: [], // last saved/loaded copy, for dirty tracking and discard
+    projects: [], // working copy being edited
+    openIndex: -1,
+  };
+
+  const els = {
+    status: $("[data-status]"),
+    dirtyPill: $("[data-dirty-pill]"),
+    unsupported: $("[data-unsupported]"),
+    welcome: $("[data-welcome]"),
+    workspace: $("[data-workspace]"),
+    summary: $("[data-summary]"),
+    categories: $("[data-categories]"),
+    reconnect: $('[data-action="reconnect"]'),
+    drawer: $("[data-drawer]"),
+    form: $("[data-form]"),
+    preview: $("[data-preview]"),
+    toast: $("[data-toast]"),
+  };
+
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+  $$("[data-save-shortcut]").forEach((el) => (el.textContent = isMac ? "⌘S" : "Ctrl+S"));
+
+  /* ---------- Video helpers (same parsing rules as src/main.js) ---------- */
+
+  function getVimeoVideoId(url) {
+    return String(url).match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1] ?? null;
+  }
+
+  function getYouTubeVideoId(url) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname === "youtu.be") return parsed.pathname.slice(1).split("/")[0] || null;
+      if (!/youtube\.com$/.test(parsed.hostname.replace(/^www\.|^m\./, ""))) return null;
+      return parsed.searchParams.get("v") ?? parsed.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/)?.[1] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  function getProvider(url) {
+    if (getYouTubeVideoId(url)) return "youtube";
+    if (getVimeoVideoId(url)) return "vimeo";
+    return null;
+  }
+
+  function getWatchUrl(url) {
+    const provider = getProvider(url);
+    if (provider === "youtube") return `https://www.youtube.com/watch?v=${getYouTubeVideoId(url)}`;
+    if (provider === "vimeo") return `https://vimeo.com/${getVimeoVideoId(url)}`;
+    return null;
+  }
+
+  const thumbnailCache = new Map();
+  function getThumbnail(url) {
+    const provider = getProvider(url);
+    if (provider === "youtube") {
+      const id = getYouTubeVideoId(url);
+      return Promise.resolve({
+        url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+      });
+    }
+    if (provider === "vimeo") {
+      const id = getVimeoVideoId(url);
+      if (!thumbnailCache.has(id)) {
+        const request = fetch(
+          `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(`https://vimeo.com/${id}`)}&width=640`
+        )
+          .then((response) => (response.ok ? response.json() : Promise.reject(new Error(response.status))))
+          .then((data) => ({ url: data.thumbnail_url }));
+        thumbnailCache.set(id, request);
+      }
+      return thumbnailCache.get(id);
+    }
+    return Promise.reject(new Error("Unknown provider"));
+  }
+
+  function renderThumb(container, project) {
+    container.replaceChildren();
+    const provider = getProvider(project.video);
+    const badge = document.createElement("span");
+    badge.className = "provider";
+    badge.textContent = provider ?? "無效連結";
+    const img = document.createElement("img");
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    container.append(img, badge);
+    getThumbnail(project.video)
+      .then(({ url }) => {
+        if (!url) return;
+        img.addEventListener("load", () => img.classList.add("is-loaded"), { once: true });
+        img.src = url;
+      })
+      .catch(() => img.remove());
+  }
+
+  /* ---------- Dirty tracking ---------- */
+
+  const clean = (value) => String(value ?? "");
+
+  function isProjectDirty(index) {
+    const current = state.projects[index];
+    const original = state.original.find((item) => item.id === current.id);
+    if (!original) return true;
+    return EDITABLE_FIELDS.some((field) => clean(current[field]) !== clean(original[field]));
+  }
+
+  function dirtyCount() {
+    return state.projects.filter((_, index) => isProjectDirty(index)).length;
+  }
+
+  function filledCount(project) {
+    return INFO_FIELDS.filter((field) => clean(project[field]).trim() !== "").length;
+  }
+
+  function updateChrome() {
+    const dirty = dirtyCount();
+    els.dirtyPill.hidden = dirty === 0;
+    els.dirtyPill.textContent = dirty === 0 ? "" : `${dirty} 支影片有未儲存的變更`;
+    $$('[data-action="save"]').forEach((button) => (button.disabled = dirty === 0 || hasInvalidVideo()));
+    $('[data-action="discard"]').hidden = dirty === 0;
+
+    const complete = state.projects.filter((project) => filledCount(project) > 0).length;
+    els.summary.textContent = `共 ${state.projects.length} 支影片，${complete} 支已有專案資訊（有資訊的影片才會在網站上顯示資訊欄）。`;
+  }
+
+  function hasInvalidVideo() {
+    return state.projects.some((project) => !getProvider(project.video));
+  }
+
+  /* ---------- Grid ---------- */
+
+  function renderGrid() {
+    els.categories.replaceChildren();
+    const groups = new Map();
+    state.projects.forEach((project, index) => {
+      if (!groups.has(project.category)) groups.set(project.category, []);
+      groups.get(project.category).push(index);
+    });
+
+    groups.forEach((indexes, category) => {
+      const section = document.createElement("section");
+      section.className = "category";
+      const heading = document.createElement("h2");
+      heading.textContent = CATEGORY_LABELS[category] ?? category;
+      const count = document.createElement("span");
+      count.textContent = `${indexes.length} 支`;
+      heading.append(count);
+      const grid = document.createElement("div");
+      grid.className = "grid";
+      indexes.forEach((index) => grid.append(buildCard(index)));
+      section.append(heading, grid);
+      els.categories.append(section);
+    });
+    updateChrome();
+  }
+
+  function buildCard(index) {
+    const project = state.projects[index];
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "card";
+    card.dataset.index = String(index);
+    card.addEventListener("click", () => openDrawer(index));
+
+    const thumb = document.createElement("span");
+    thumb.className = "thumb";
+    renderThumb(thumb, project);
+
+    const body = document.createElement("span");
+    body.className = "card-body";
+    const title = document.createElement("span");
+    title.className = "card-title";
+    const id = document.createElement("span");
+    id.className = "card-id";
+    const progress = document.createElement("span");
+    progress.className = "progress";
+    const bar = document.createElement("span");
+    bar.className = "progress-bar";
+    bar.append(document.createElement("i"));
+    const label = document.createElement("span");
+    progress.append(bar, label);
+    body.append(title, id, progress);
+    card.append(thumb, body);
+
+    updateCard(card);
+    return card;
+  }
+
+  function updateCard(card) {
+    const index = Number(card.dataset.index);
+    const project = state.projects[index];
+    const filled = filledCount(project);
+    const dirty = isProjectDirty(index);
+
+    $(".card-title", card).textContent = project.title || "（未命名）";
+    $(".card-id", card).textContent = project.id;
+    const progress = $(".progress", card);
+    progress.classList.toggle("is-complete", filled === INFO_FIELDS.length);
+    progress.classList.toggle("is-partial", filled > 0 && filled < INFO_FIELDS.length);
+    $(".progress-bar i", card).style.width = `${(filled / INFO_FIELDS.length) * 100}%`;
+    $(".progress > span:last-child", card).textContent =
+      filled === 0 ? "尚未填寫" : `已填 ${filled}/${INFO_FIELDS.length}`;
+
+    card.classList.toggle("is-dirty", dirty);
+    const thumb = $(".thumb", card);
+    let unsaved = $(".unsaved", thumb);
+    if (dirty && !unsaved) {
+      unsaved = document.createElement("span");
+      unsaved.className = "unsaved";
+      unsaved.textContent = "未儲存";
+      thumb.append(unsaved);
+    } else if (!dirty && unsaved) {
+      unsaved.remove();
+    }
+    card.setAttribute("aria-label", `編輯 ${project.title}${dirty ? "（未儲存）" : ""}`);
+  }
+
+  function refreshCard(index) {
+    const card = $(`.card[data-index="${index}"]`);
+    if (card) updateCard(card);
+  }
+
+  /* ---------- Drawer ---------- */
+
+  function openDrawer(index) {
+    state.openIndex = index;
+    fillDrawer();
+    if (!els.drawer.open) els.drawer.showModal();
+    $("#f-title").focus({ preventScroll: true });
+  }
+
+  function fillDrawer() {
+    const index = state.openIndex;
+    const project = state.projects[index];
+    $("[data-counter]").textContent = `${index + 1} / ${state.projects.length}`;
+    $('[data-action="prev"]').disabled = index === 0;
+    $('[data-action="next"]').disabled = index === state.projects.length - 1;
+
+    EDITABLE_FIELDS.forEach((field) => {
+      els.form.elements[field].value = clean(project[field]);
+    });
+    updateDrawerMeta();
+    renderThumb($("[data-drawer-thumb]"), project);
+    $(".drawer-scroll").scrollTop = 0;
+  }
+
+  function updateDrawerMeta() {
+    const project = state.projects[state.openIndex];
+    $("[data-drawer-title]").textContent = project.title || "（未命名）";
+    $("[data-drawer-sub]").textContent = `${CATEGORY_LABELS[project.category] ?? project.category} · ${project.id}`;
+    const watch = getWatchUrl(project.video);
+    const link = $("[data-drawer-link]");
+    link.hidden = !watch;
+    if (watch) link.href = watch;
+
+    const videoInput = els.form.elements.video;
+    const hint = $("[data-video-hint]");
+    const valid = Boolean(getProvider(project.video));
+    videoInput.classList.toggle("is-invalid", !valid);
+    hint.classList.toggle("error", !valid);
+    hint.textContent = valid
+      ? "Vimeo 或 YouTube 網址。一般不需要改。"
+      : "看不出這是 Vimeo 或 YouTube 的連結，網站會播不出來。修正前無法儲存。";
+
+    const length = clean(project.concept).trim().length;
+    $("[data-concept-count]").textContent = length ? `${length} 字` : "";
+    $('[data-action="revert-one"]').disabled = !isProjectDirty(state.openIndex);
+    renderPreview(project);
+  }
+
+  // Same rules as fillVideoInfo() in src/main.js.
+  function renderPreview(project) {
+    const value = (field) => clean(project[field]).trim();
+    const metaParts = [value("client"), value("role"), value("year")].filter(Boolean);
+    const hasInfo = metaParts.length > 0 || value("tools") !== "" || value("concept") !== "";
+    els.preview.replaceChildren();
+
+    if (!hasInfo) {
+      els.preview.className = "preview-empty";
+      els.preview.textContent =
+        "目前沒有資訊，所以網站上這支影片只會顯示影片本身。填入客戶、角色、年份、工具或製作理念任一項後，就會出現資訊欄。";
+      return;
+    }
+
+    els.preview.className = "preview";
+    const add = (className, text, tag = "p") => {
+      if (!text) return;
+      const el = document.createElement(tag);
+      el.className = className;
+      el.textContent = text;
+      els.preview.append(el);
+    };
+    add("p-eyebrow", "Project");
+    add("p-title", value("title"));
+    add("p-meta", metaParts.join(" · "));
+    add("p-tools", value("tools"));
+    add("p-concept", value("concept"));
+    add("p-cta", "Work with me  ↗", "span");
+  }
+
+  els.form.addEventListener("input", (event) => {
+    const field = event.target.name;
+    if (!EDITABLE_FIELDS.includes(field)) return;
+    const project = state.projects[state.openIndex];
+    project[field] = event.target.value;
+    updateDrawerMeta();
+    if (field === "video") renderThumb($("[data-drawer-thumb]"), project);
+    refreshCard(state.openIndex);
+    if (field === "video") renderThumb($(`.card[data-index="${state.openIndex}"] .thumb`), project);
+    updateChrome();
+  });
+  els.form.addEventListener("submit", (event) => event.preventDefault());
+
+  function step(delta) {
+    const next = state.openIndex + delta;
+    if (next < 0 || next >= state.projects.length) return;
+    state.openIndex = next;
+    fillDrawer();
+  }
+
+  function revertOne() {
+    const project = state.projects[state.openIndex];
+    const original = state.original.find((item) => item.id === project.id);
+    if (!original) return;
+    EDITABLE_FIELDS.forEach((field) => {
+      if (field in original) project[field] = original[field];
+    });
+    fillDrawer();
+    refreshCard(state.openIndex);
+    renderThumb($(`.card[data-index="${state.openIndex}"] .thumb`), project);
+    updateChrome();
+  }
+
+  els.drawer.addEventListener("click", (event) => {
+    if (event.target === els.drawer) els.drawer.close();
+  });
+
+  /* ---------- File access ---------- */
+
+  function openDb() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = () => request.result.createObjectStore(STORE);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function storeHandle(handle) {
+    try {
+      const db = await openDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(handle, "root");
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    } catch {
+      // Remembering the folder is a convenience; picking it again still works.
+    }
+  }
+
+  async function loadStoredHandle() {
+    try {
+      const db = await openDb();
+      return await new Promise((resolve) => {
+        const request = db.transaction(STORE).objectStore(STORE).get("root");
+        request.onsuccess = () => resolve(request.result ?? null);
+        request.onerror = () => resolve(null);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  // Accepts the project folder (finds src/projects.json) or the src folder itself.
+  async function findProjectsFile(rootHandle) {
+    try {
+      const src = await rootHandle.getDirectoryHandle("src");
+      return await src.getFileHandle("projects.json");
+    } catch {
+      try {
+        return await rootHandle.getFileHandle("projects.json");
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  function validateProjects(data) {
+    if (!Array.isArray(data) || data.length === 0) return "檔案內容不是影片清單。";
+    const bad = data.findIndex((item) => !item || typeof item !== "object" || !item.id || !item.video);
+    if (bad !== -1) return `第 ${bad + 1} 筆資料缺少 id 或 video。`;
+    return null;
+  }
+
+  async function connect(rootHandle) {
+    const fileHandle = await findProjectsFile(rootHandle);
+    if (!fileHandle) {
+      showToast(
+        "找不到 src/projects.json",
+        `你選的是「${rootHandle.name}」。請選網站專案的資料夾（裡面有 index.html 和 src 的那個）。`,
+        { error: true }
+      );
+      return false;
+    }
+
+    const file = await fileHandle.getFile();
+    let data;
+    try {
+      data = JSON.parse(await file.text());
+    } catch {
+      showToast("projects.json 格式有誤", "檔案不是有效的 JSON，可能被手動改壞了。請 Claude 幫你檢查。", { error: true });
+      return false;
+    }
+    const problem = validateProjects(data);
+    if (problem) {
+      showToast("projects.json 內容有誤", problem, { error: true });
+      return false;
+    }
+
+    state.rootHandle = rootHandle;
+    state.fileHandle = fileHandle;
+    state.fileLastModified = file.lastModified;
+    state.original = structuredClone(data);
+    state.projects = data;
+
+    els.status.replaceChildren("已連接：");
+    const folder = document.createElement("span");
+    folder.className = "folder";
+    folder.textContent = `${rootHandle.name}/src/projects.json`;
+    els.status.append(folder);
+    els.welcome.hidden = true;
+    els.workspace.hidden = false;
+    $('[data-action="save"]').hidden = false;
+    $('[data-action="change-folder"]').hidden = false;
+    renderGrid();
+    await storeHandle(rootHandle);
+    return true;
+  }
+
+  async function pickFolder() {
+    if (dirtyCount() > 0 && !confirm("換資料夾會捨棄目前未儲存的變更，確定嗎？")) return;
+    try {
+      const handle = await window.showDirectoryPicker({ id: "portfolio-website", mode: "readwrite" });
+      await connect(handle);
+    } catch (error) {
+      if (error?.name !== "AbortError") showToast("無法開啟資料夾", error?.message ?? String(error), { error: true });
+    }
+  }
+
+  async function ensurePermission(handle) {
+    const options = { mode: "readwrite" };
+    if ((await handle.queryPermission(options)) === "granted") return true;
+    return (await handle.requestPermission(options)) === "granted";
+  }
+
+  async function save() {
+    if (!state.fileHandle || dirtyCount() === 0) return;
+    if (hasInvalidVideo()) {
+      showToast("有影片連結無效", "請先修正標紅色的影片連結再儲存。", { error: true });
+      return;
+    }
+
+    try {
+      if (!(await ensurePermission(state.fileHandle))) {
+        showToast("沒有寫入權限", "請在 Chrome 跳出的視窗選「允許」後再儲存一次。", { error: true });
+        return;
+      }
+
+      // If the file changed on disk since it was loaded (Claude or another edit),
+      // do not silently overwrite it.
+      const onDisk = await state.fileHandle.getFile();
+      if (onDisk.lastModified !== state.fileLastModified) {
+        const diskText = await onDisk.text();
+        if (diskText !== serialize(state.original)) {
+          const overwrite = confirm(
+            "projects.json 在你開啟編輯器之後被其他地方改過了（例如 Claude 新增了影片）。\n\n" +
+              "按「確定」用你現在的版本覆蓋；按「取消」不儲存，之後可重新整理頁面載入最新版本再編輯。"
+          );
+          if (!overwrite) return;
+        }
+      }
+
+      const text = serialize(state.projects);
+      const writable = await state.fileHandle.createWritable();
+      await writable.write(text);
+      await writable.close();
+
+      const saved = await state.fileHandle.getFile();
+      state.fileLastModified = saved.lastModified;
+      state.original = structuredClone(state.projects);
+      $$(".card").forEach(updateCard);
+      if (els.drawer.open) updateDrawerMeta();
+      updateChrome();
+      showToast("已儲存到 src/projects.json", "要更新網站，在 Terminal 執行下面這行（或請 Claude 幫你 push）：", {
+        command: PUBLISH_COMMAND,
+      });
+    } catch (error) {
+      showToast("儲存失敗", error?.message ?? String(error), { error: true });
+    }
+  }
+
+  // Same format the repo uses: 2-space JSON plus a trailing newline, so git diffs
+  // only show the lines that were actually edited.
+  function serialize(data) {
+    return `${JSON.stringify(data, null, 2)}\n`;
+  }
+
+  function discard() {
+    if (!confirm(`捨棄 ${dirtyCount()} 支影片的未儲存變更？`)) return;
+    state.projects = structuredClone(state.original);
+    if (els.drawer.open) els.drawer.close();
+    renderGrid();
+  }
+
+  /* ---------- Toast ---------- */
+
+  let toastTimer = null;
+  function hideToast() {
+    if (els.toast.matches(":popover-open")) els.toast.hidePopover();
+  }
+
+  function showToast(title, message, { error = false, command = null } = {}) {
+    clearTimeout(toastTimer);
+    hideToast();
+    els.toast.replaceChildren();
+    els.toast.classList.toggle("error", error);
+
+    const head = document.createElement("div");
+    head.className = "toast-head";
+    const strong = document.createElement("strong");
+    strong.textContent = title;
+    const close = document.createElement("button");
+    close.className = "toast-close";
+    close.type = "button";
+    close.setAttribute("aria-label", "關閉訊息");
+    close.textContent = "×";
+    close.addEventListener("click", hideToast);
+    head.append(strong, close);
+    els.toast.append(head);
+
+    if (message) {
+      const p = document.createElement("p");
+      p.textContent = message;
+      els.toast.append(p);
+    }
+
+    if (command) {
+      const row = document.createElement("div");
+      row.className = "cmd";
+      const code = document.createElement("code");
+      code.textContent = command;
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.textContent = "複製";
+      copy.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(command);
+          copy.textContent = "已複製";
+        } catch {
+          copy.textContent = "請手動複製";
+        }
+      });
+      row.append(code, copy);
+      els.toast.append(row);
+    }
+
+    // Re-showing after the drawer opened puts the toast above it in the top layer.
+    els.toast.showPopover();
+    if (!command) toastTimer = setTimeout(hideToast, error ? 9000 : 4000);
+  }
+
+  /* ---------- Wiring ---------- */
+
+  document.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-action]")?.dataset.action;
+    if (!action) return;
+    if (action === "pick" || action === "change-folder") pickFolder();
+    if (action === "save") save();
+    if (action === "discard") discard();
+    if (action === "prev") step(-1);
+    if (action === "next") step(1);
+    if (action === "close") els.drawer.close();
+    if (action === "revert-one") revertOne();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault();
+      save();
+    }
+  });
+
+  window.addEventListener("beforeunload", (event) => {
+    if (dirtyCount() === 0) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
+  async function init() {
+    if (!("showDirectoryPicker" in window)) {
+      els.unsupported.hidden = false;
+      $('[data-action="pick"]').disabled = true;
+      return;
+    }
+
+    // Chrome keeps the folder handle across visits, but asks again for
+    // permission; that prompt needs a click, hence the reconnect button.
+    const stored = await loadStoredHandle();
+    if (!stored) return;
+    try {
+      if ((await stored.queryPermission({ mode: "readwrite" })) === "granted") {
+        await connect(stored);
+        return;
+      }
+    } catch {
+      return;
+    }
+    els.reconnect.textContent = `繼續編輯「${stored.name}」`;
+    els.reconnect.hidden = false;
+    els.reconnect.addEventListener("click", async () => {
+      try {
+        if (await ensurePermission(stored)) await connect(stored);
+      } catch (error) {
+        showToast("無法重新連接", error?.message ?? String(error), { error: true });
+      }
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
