@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://toby412.github.io/toby-portfolio/sitemap.xml

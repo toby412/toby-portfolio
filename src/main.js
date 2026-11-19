@@ -1002,3 +1002,41 @@ contactPanelObserver.observe(contactForm);
 
 window.addEventListener("resize", () => requestAnimationFrame(sizeContactPanel));
 requestAnimationFrame(sizeContactPanel);
+
+/* ---------------------------------------------------------------------------
+   VideoObject structured data (for search engines, invisible to visitors)
+   Built from projects.json at load. Google requires name, description,
+   thumbnailUrl and uploadDate, so only videos with a concept and a 4-digit
+   year are described; others are skipped rather than published half-empty.
+   --------------------------------------------------------------------------- */
+(function addVideoStructuredData() {
+  const describable = projects.filter(
+    (project) =>
+      project.id !== "showreel" &&
+      String(project.concept ?? "").trim() !== "" &&
+      /^\d{4}$/.test(String(project.year ?? "").trim())
+  );
+  if (describable.length === 0) return;
+
+  Promise.all(
+    describable.map((project) =>
+      getProjectThumbnail(project.video)
+        .then(({ url }) => ({
+          "@type": "VideoObject",
+          name: String(project.title).trim(),
+          description: String(project.concept).trim(),
+          thumbnailUrl: url,
+          uploadDate: `${String(project.year).trim()}-01-01`,
+          embedUrl: getVideoEmbedUrl(project.video).split("?")[0],
+        }))
+        .catch(() => null)
+    )
+  ).then((videos) => {
+    const items = videos.filter(Boolean);
+    if (items.length === 0) return;
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": items });
+    document.head.append(script);
+  });
+})();

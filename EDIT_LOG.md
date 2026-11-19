@@ -302,6 +302,36 @@ Recorded, not yet acted on. None is currently breaking the site.
 
 Newest first. Dates are the commit/authoring date.
 
+### 2026-11-19 — Link preview card (Open Graph / Twitter) + canonical
+
+- **Section affected:** `<head>` of `index.html`; `public/`.
+- **What changed:** Added `og:*` and `twitter:*` tags (summary_large_image), a canonical link, and
+  `public/og-image.jpg` (1200×630, 83 KB). The image was made from
+  `~/Personal/Visuals/主視覺.png` (8000×4500): centre-cropped to 8000×4200, then resized — the
+  original is not in the repo.
+- **Videos:** none.
+- **Implementation notes:** `og:image` / `twitter:image` must be **absolute** URLs, so they hard-code
+  `https://toby412.github.io/toby-portfolio/og-image.jpg`. If the site moves to a custom domain
+  (or the repo is renamed), update those URLs, the canonical link, `og:url`, the JSON-LD `url` and
+  `public/sitemap.xml` / `robots.txt`. Platforms cache previews: after changing the image, re-scrape
+  with Facebook's Sharing Debugger / LinkedIn Post Inspector.
+- **Fixed / reverted:** none.
+
+### 2026-11-19 — robots.txt, Person schema fix, VideoObject structured data
+
+- **Section affected:** `<head>` / SEO; `public/`.
+- **What changed:** Added `public/robots.txt` (allow all, points to the sitemap). Removed "Web Developer"
+  from the Person JSON-LD (`jobTitle`, `description`, `knowsAbout`). `src/main.js` now injects a
+  second JSON-LD block of `VideoObject`s at load, built from `projects.json`.
+- **Videos:** none changed.
+- **Implementation notes:** A video is described only if it has a `concept` **and** a 4-digit
+  `year` (Google requires name, description, thumbnailUrl, uploadDate; `uploadDate` is
+  `<year>-01-01`). The showreel is excluded. Thumbnails reuse `getProjectThumbnail()`, so Vimeo ones
+  come from oEmbed. Verified in Chrome that the block renders with all 11 filled videos and no
+  errors. Injected at runtime, so Google sees it only because it renders JavaScript; no
+  Open Graph / Twitter tags exist yet (not part of this change).
+- **Fixed / reverted:** none.
+
 ### 2026-11-19 — Instant expand with sound
 
 - **Section affected:** Modal; Brand & Commercial, Shorts & Reels, Films & Documentary featured/short players.
