@@ -1970,3 +1970,27 @@ h1 span {
     font-size: 11px;
   }
 }
+
+/* Desktop/tablet Shorts carousel (above the 580px phone breakpoint only).
+   Keeps every Short on one row and lets the list own horizontal overflow;
+   main.js maps vertical mouse-wheel movement to horizontal scrolling here.
+   The phone rail in the max-width: 580px block is deliberately untouched. */
+@media (min-width: 581px) {
+  .shorts-video-list {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: clip;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline proximity;
+    scrollbar-width: none;
+  }
+
+  .shorts-video-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shorts-video-list .short-video-card {
+    scroll-snap-align: start;
+  }
+}

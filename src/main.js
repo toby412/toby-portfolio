@@ -411,6 +411,38 @@ document.querySelectorAll(".shorts-video-list").forEach((list) => {
     .forEach((project) => list.append(shortVideoCard(project)));
 });
 
+// Desktop only (matches the min-width: 581px CSS block): vertical mouse-wheel
+// movement scrolls the Shorts row sideways. The row is row-reverse, so the
+// first Short sits on the right and wheeling down moves left toward later
+// Shorts. At either end the wheel falls through to normal page scrolling.
+// Phones keep their native touch rail; this handler never runs there.
+const desktopShorts = window.matchMedia("(min-width: 581px)");
+
+document.querySelectorAll(".shorts-video-list").forEach((list) => {
+  list.addEventListener(
+    "wheel",
+    (event) => {
+      if (!desktopShorts.matches) return;
+      if (event.ctrlKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
+      const maxScroll = list.scrollWidth - list.clientWidth;
+      if (maxScroll <= 1) return;
+
+      const unit =
+        event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? list.clientWidth : 1;
+      const delta = -event.deltaY * unit;
+      // row-reverse overflow: scrollLeft runs from 0 (right end) to -maxScroll.
+      const position = list.scrollLeft;
+      const atStart = position >= -1 && delta > 0;
+      const atEnd = position <= -maxScroll + 1 && delta < 0;
+      if (atStart || atEnd) return;
+
+      event.preventDefault();
+      list.scrollLeft = Math.max(-maxScroll, Math.min(0, position + delta));
+    },
+    { passive: false }
+  );
+});
+
 // The rails are deliberately finite click-to-play strips rather than looping
 // carousels: each holds only the two videos left over after the featured one,
 // a count at which a cloned infinite loop reads as broken.

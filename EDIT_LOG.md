@@ -152,8 +152,13 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
 - The list uses `row-reverse`, placing `short-01`, `short-04`, `short-02`, `short-03`, and `short-05` from
   right to left while retaining that semantic source order.
 - Clips use 225px desktop width (75% of the prior size) and responsive 157.5px/195px widths at
-  the existing breakpoints. The list is right-aligned to the Short heading, wraps when needed, and
-  stacks below 580px instead of scrolling.
+  the existing breakpoints. The list is right-aligned to the Short heading.
+- Above 580px (desktop/tablet) the list never wraps: it is a one-row horizontal carousel with a
+  hidden scrollbar, and `main.js` maps vertical mouse-wheel movement to horizontal scrolling
+  (wheel down → toward later Shorts, i.e. leftward; at either end the wheel falls through to page
+  scroll). This lives in a separate `@media (min-width: 581px)` block at the end of `styles.css`.
+- At ≤580px the phone rail (full-bleed, touch scroll, snap) in the `max-width: 580px` block is
+  unchanged; the wheel handler is gated by the same 581px media query and never runs on phones.
 - Clicking any Short, Commercial, or Documentary looping player opens the same expanded modal.
 
 **Modal player — `<dialog class="video-modal">`**
@@ -245,6 +250,15 @@ Recorded, not yet acted on. None is currently breaking the site.
 ## 5. Change History
 
 Newest first. Dates are the commit/authoring date.
+
+### 2026-11-19 — Desktop Shorts carousel with wheel scrolling
+
+- **Section affected:** Shorts & Reels, desktop/tablet only (>580px).
+- **What changed:** With five Shorts, the desktop row wrapped the fifth clip to a second line. Above 580px the list is now a single non-wrapping horizontal carousel.
+- **Videos:** none.
+- **Layout/interaction:** `flex-wrap: nowrap`, `overflow-x: auto`, inline scroll snap, hidden scrollbar. Vertical mouse wheel over the row scrolls it horizontally; at the ends the page scrolls normally. Horizontal trackpad swipes and ctrl+wheel zoom are left native.
+- **Implementation notes:** The row is `row-reverse`, so `scrollLeft` runs from 0 (rightmost, first Short) to negative values. The CSS is a new `@media (min-width: 581px)` block appended to `styles.css`; the JS handler checks the same media query. Mobile CSS was not edited. A headless check at 390px showed identical computed styles and card positions before and after.
+- **Fixed / reverted:** Do not move these rules into the base `.shorts-video-list` rule. That would leak into the phone rail.
 
 ### 2026-11-19 — Fifth Short (YouTube)
 
