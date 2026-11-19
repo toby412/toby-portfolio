@@ -340,9 +340,9 @@ function shortVideoCard(project) {
   toggle.innerHTML = `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
-      <path d="m17 9 4 6M21 9l-4 6"></path>
+      <path class="icon-muted" d="m17 9 4 6M21 9l-4 6"></path>
+      <path class="icon-waves" d="M16.5 8.5a5 5 0 0 1 0 7M19.5 6a8.5 8.5 0 0 1 0 12"></path>
     </svg>
-    <span>Audio Off</span>
   `;
 
   toggle.addEventListener("click", () => {
@@ -451,7 +451,6 @@ function updateAudioToggle(toggle, project, isMuted) {
     "aria-label",
     `Turn ${project.title} audio ${isMuted ? "on" : "off"}`
   );
-  toggle.querySelector("span").textContent = isMuted ? "Audio Off" : "Audio On";
   toggle.classList.toggle("is-audio-on", !isMuted);
 }
 

@@ -216,7 +216,10 @@ the card stays clickable. Vimeo thumbnails are network-dependent, so a card can 
   hero parallax/cursor, stat counters, and workflow stagger all degrade to instant.
 - Cloned carousel cards are hidden from assistive tech; every real card has `aria-label="Play <title>"`.
 - Carousel arrows carry `aria-controls` pointing at their rail's `id`.
-- The audio toggle maintains `aria-pressed` and swaps its `aria-label` and visible label.
+- The audio toggle is **icon-only** (34px round, no text; changed 2026-11-19). State shows in the
+  icon — `.icon-muted` (speaker + cross) vs `.icon-waves` (speaker + waves, orange background when
+  `.is-audio-on`) — and `updateAudioToggle()` maintains `aria-pressed` and `aria-label`.
+  Because there is no visible text, keep the `aria-label`.
 
 ---
 
