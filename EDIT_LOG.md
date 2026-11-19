@@ -317,18 +317,15 @@ Newest first. Dates are the commit/authoring date.
   - Clicking the hero (or Enter/Space on it) calls `openShowreel()` → `openLoopingVideo()`: in
     Chrome/Edge the live iframe moves into the modal instantly and unmutes (see §2.4); elsewhere a
     fresh looping player with sound is built.
-  - New `.hero-status` pill, "Available for projects" (green pulsing dot), bottom-left, linking to
-    `#contact`. It has `data-no-video` so the document click handler ignores it, and the hero's
-    keydown handler ignores keys whose target is not the hero itself. Delete the `<a>` to remove it.
+  - ~~New `.hero-status` "Available for projects" pill~~ — added, then **removed the same day** at the
+    owner's request (HTML, CSS, `data-no-video` handling and the hero keydown target check are all
+    gone). The hero contains no interactive children again.
 - **Videos:** none; the showreel id is unchanged. The hero embed gained the shared extra params
   (`autopause=0`, `playsinline`, `title/byline/portrait=0`).
-- **Layout/interaction:** Pill sits on the hero's bottom gradient; over it the play-cursor badge
-  hides (`.hero:has(.hero-status:hover)`). Phone pill is smaller and at `left: 12px`.
 - **Implementation notes:** **Behaviour change:** the expanded showreel is now a *background-mode*
   player like the other looping videos — loops, no seek/pause controls, audio toggle in the modal —
   whereas before it opened the full Vimeo player with controls. To restore controls, make
-  `openShowreel()` call `openVideo("showreel")` again. The hero is not role-clean: it is
-  `role="button"` and now contains a link (known nested-interactive a11y trade-off).
+  `openShowreel()` call `openVideo("showreel")` again.
   `updateAmbientVideoSource()` is null-safe for containers without an audio toggle.
   Verified on the production build at 1440×900 and 390×844, plus a no-`moveBefore` run: poster
   then playing state, same iframe moves to the modal and back, hero poster shown while expanded,

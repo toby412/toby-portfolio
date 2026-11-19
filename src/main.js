@@ -693,8 +693,6 @@ function openShowreel() {
 }
 
 hero.addEventListener("keydown", (event) => {
-  // Keys pressed on the availability link inside the hero belong to the link.
-  if (event.target !== hero) return;
   if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
   openShowreel();
@@ -741,7 +739,6 @@ function closeVideo(onClosed) {
 }
 
 document.addEventListener("click", (event) => {
-  if (event.target.closest("[data-no-video]")) return;
   const trigger = event.target.closest("[data-video]");
   if (!trigger) return;
   if (trigger === hero) openShowreel();
